@@ -10,33 +10,24 @@ import { createMaterialTopTabNavigator } from '@react-navigation/material-top-ta
 
 import SettingsScreen from './components/Settings.js';
 import GaugeScreen from './components/Gauges.js';
+import GraphScreen from './components/Graph.js';
 
-function Screen3Screen({ navigation }) {
-  return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>Screen3</Text>
-      <Button
-        title="Go to Gauges"
-        onPress={() => navigation.navigate('Gauges')}
-      />
-    </View>
-  );
-}
+
 
 const Stack = createNativeStackNavigator();
 
 function GaugeStack() {
   return (
-    <Stack.Navigator initialRouteName="Gauges">
+    <Stack.Navigator initialRouteName="SettingsScreen">
       <Stack.Screen name="Gauges" component={GaugeScreen}/>
-      <Stack.Screen name="Screen3" component={Screen3Screen} />
+      <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="Graph" component={GraphScreen} />
     </Stack.Navigator>
   );
 }
 
 
 const Tab = createMaterialTopTabNavigator();
-
 function App() {
   return (
     <SafeAreaView style={styles.container}>
@@ -44,7 +35,7 @@ function App() {
       <Tab.Navigator initialRouteName="Screen3">
         <Tab.Screen name="Gauges" component={GaugeStack} />
         <Tab.Screen name="Settings" component={SettingsScreen} />
-        <Stack.Screen name="Screen3" component={Screen3Screen} />
+        <Stack.Screen name="Graph" component={GraphScreen} />
       </Tab.Navigator>
     </NavigationContainer>
     </SafeAreaView>
