@@ -49,9 +49,9 @@ export function GaugeScreen({ navigation }) {
     function onConnect() {
       console.log("Connected!");
       setIsConnected(true);
-      client.subscribe("topic1");
-      client.subscribe("topic2");
-      client.subscribe("topic3");
+      client.subscribe("topic4");
+      client.subscribe("topic5");
+      // client.subscribe("topic3");
     }
 
     // Function to handle connection failure
@@ -66,14 +66,15 @@ export function GaugeScreen({ navigation }) {
      * *********************************************/
     function onMessageReceived(message) {
       console.log("Message received:", message.payloadString);
-      if (message.destinationName === "topic1") {
+      if (message.destinationName === "topic4") {
         setValue1(parseInt(message.payloadString));
-      } else if (message.destinationName === "topic2") {
+      } else if (message.destinationName === "topic5") {
         setValue2(parseInt(message.payloadString));
-      } else if (message.destinationName === "topic3") {
-        setValue3(parseInt(message.payloadString));
-      }
+      // } else if (message.destinationName === "topic3") {
+      //   setValue3(parseInt(message.payloadString));
+      // }
     }
+  } 
     /***********************************************
      *    Function to handle incoming messages     *
      *                     end                     *
