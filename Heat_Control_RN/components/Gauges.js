@@ -49,8 +49,9 @@ export function GaugeScreen({ navigation }) {
     function onConnect() {
       console.log("Connected!");
       setIsConnected(true);
-      client.subscribe("topic4");
-      client.subscribe("topic5");
+      client.subscribe("topic1");
+      client.subscribe("topic2");
+      client.subscribe("topic3");
       // client.subscribe("topic3");
     }
 
@@ -66,15 +67,14 @@ export function GaugeScreen({ navigation }) {
      * *********************************************/
     function onMessageReceived(message) {
       console.log("Message received:", message.payloadString);
-      if (message.destinationName === "topic4") {
+      if (message.destinationName === "topic1") {
         setValue1(parseInt(message.payloadString));
-      } else if (message.destinationName === "topic5") {
+      } else if (message.destinationName === "topic2") {
         setValue2(parseInt(message.payloadString));
-      // } else if (message.destinationName === "topic3") {
-      //   setValue3(parseInt(message.payloadString));
-      // }
+      } else if (message.destinationName === "topic3") {
+        setValue3(parseInt(message.payloadString));
+      }
     }
-  } 
     /***********************************************
      *    Function to handle incoming messages     *
      *                     end                     *
@@ -144,17 +144,25 @@ export function GaugeScreen({ navigation }) {
       console.log("Message sent:", message.payloadString);
     }, 5000);
   }
+
   /**************************************************************
    *         Function to change the value and send it           *
    *                           end                              *
    * ***********************************************************/
-
   return (
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
       <Text>Gauges</Text>
-      <Text>{value1}</Text>
-      <Text>{value2}</Text>
-      <Text>{value3}</Text>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          width: "10%",
+        }}
+      >
+        <Text>{value1}</Text>
+        <Text>{value2}</Text>
+        <Text>{value3}</Text>
+      </View>
       <Button
         title="Go to Settings"
         onPress={() => {

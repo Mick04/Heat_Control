@@ -168,6 +168,7 @@ message2.destinationName = "topic2";
   return (
     <View style={styles.container}>
       <SafeAreaView>
+      
         <View
           style={{
             flexDirection: "row",
@@ -210,8 +211,8 @@ message2.destinationName = "topic2";
         <View>
           <Button title="Publish" onPress={publishMessage} />
           <Button
-            title="Go to Graphs"
-            onPress={() => navigation.navigate("Graph")}
+            title="Go to Gauges"
+            onPress={() => navigation.navigate("Gauges")}
           />
         </View>
       </SafeAreaView>
