@@ -8,6 +8,8 @@ import {
   TextInput,
   StyleSheet,
   SafeAreaView,
+  TouchableOpacity,
+  Modal,
 } from "react-native";
 
 /************************************
@@ -26,15 +28,8 @@ const client = new Paho.Client(
  *                end               *
  * **********************************/
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
-
 export function SettingsScreen({ navigation }) {
+  const [open, setOpen] = useState(false); // opens and closes the modal
   /************************************
    *          State variable          *
    *              start               *
@@ -139,13 +134,12 @@ export function SettingsScreen({ navigation }) {
         return;
       }
     }
- 
+
     const message = new Paho.Message(value1.toString());
     message.destinationName = "topic1";
-   
 
     const message2 = new Paho.Message(value2.toString());
-message2.destinationName = "topic2";
+    message2.destinationName = "topic2";
     const message3 = new Paho.Message(value3.toString());
     message3.destinationName = "topic3";
     const sendMessages = async () => {
@@ -165,10 +159,26 @@ message2.destinationName = "topic2";
     sendMessages();
   };
 
+  function handleOnPress() {
+    setOpen(!open);
+  }
+
   return (
     <View style={styles.container}>
       <SafeAreaView>
-      
+        <TouchableOpacity onPress={handleOnPress}>
+          <Text>reset values</Text>
+        </TouchableOpacity>
+
+        <Modal visible={open} animationType="slide" transparent={true}>
+          <View style={styles.ceneteredView}></View>
+          <View style={styles.modalView}>
+            <TouchableOpacity onPress={handleOnPress}>
+              <Text>reset values</Text>
+            </TouchableOpacity>
+          </View>
+        </Modal>
+
         <View
           style={{
             flexDirection: "row",
@@ -219,5 +229,34 @@ message2.destinationName = "topic2";
     </View>
   );
 }
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  ceneteredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22,
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    width: "90%",
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+});
 
 export default SettingsScreen;
