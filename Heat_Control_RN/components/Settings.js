@@ -8,6 +8,7 @@ import {
   TextInput,
   StyleSheet,
   SafeAreaView,
+  TouchableOpacity,
 } from "react-native";
 
 /************************************
@@ -139,13 +140,12 @@ export function SettingsScreen({ navigation }) {
         return;
       }
     }
- 
+
     const message = new Paho.Message(value1.toString());
     message.destinationName = "topic1";
-   
 
     const message2 = new Paho.Message(value2.toString());
-message2.destinationName = "topic2";
+    message2.destinationName = "topic2";
     const message3 = new Paho.Message(value3.toString());
     message3.destinationName = "topic3";
     const sendMessages = async () => {
@@ -168,7 +168,6 @@ message2.destinationName = "topic2";
   return (
     <View style={styles.container}>
       <SafeAreaView>
-      
         <View
           style={{
             flexDirection: "row",
@@ -208,12 +207,28 @@ message2.destinationName = "topic2";
             }}
           />
         </View>
-        <View>
-          <Button title="Publish" onPress={publishMessage} />
-          <Button
-            title="Go to Gauges"
+        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
+          <TouchableOpacity
+            style={{
+
+              borderWidth: 1,
+              borderColor: "black",
+              margin: 2,
+              padding: 2,
+            }}
+            onPress={publishMessage}
+          >
+            <Text> Publish</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              margin: 2,
+              padding: 2,
+            }}
             onPress={() => navigation.navigate("Gauges")}
-          />
+          >
+            <Text>Go to Gauges</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     </View>
