@@ -220,7 +220,7 @@ export function SettingsScreen({ navigation }) {
           >
             <Text> Publish</Text>
           </TouchableOpacity>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={{
               margin: 2,
               padding: 2,
@@ -228,7 +228,7 @@ export function SettingsScreen({ navigation }) {
             onPress={() => navigation.navigate("Gauges")}
           >
             <Text>Go to Gauges</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </SafeAreaView>
     </View>

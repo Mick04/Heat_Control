@@ -6,10 +6,10 @@ function GraphScreen({ navigation }) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
         <Text>Graph</Text>
-        <Button
+        {/* <Button
           title="Go to Gauges"
           onPress={() => navigation.navigate('Gauges')}
-        />
+        /> */}
       </View>
     );
   }

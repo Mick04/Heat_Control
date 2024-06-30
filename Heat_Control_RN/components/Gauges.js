@@ -163,7 +163,7 @@ export function GaugeScreen({ navigation }) {
         <Text>{value2}</Text>
         <Text>{value3}</Text>
       </View>
-      <Button
+      {/* <Button
         title="Go to Settings"
         onPress={() => {
           navigation.navigate("Settings", {
@@ -171,7 +171,7 @@ export function GaugeScreen({ navigation }) {
             otherParam: "anything you want here",
           });
         }}
-      />
+      /> */}
     </View>
   );
 }

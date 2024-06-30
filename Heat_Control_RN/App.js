@@ -3,11 +3,13 @@
 import * as React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { SafeAreaView, StyleSheet } from "react-native";
+import { SafeAreaView, StyleSheet,Platform,StatusBar } from "react-native";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
+
 import SettingsScreen from "./components/Settings.js";
 import GaugeScreen from "./components/Gauges.js";
 import GraphScreen from "./components/Graph.js";
+import HomeScreen from "./components/HomeScreen.js";
 
 // const Stack = createNativeStackNavigator();
 
@@ -24,9 +26,10 @@ import GraphScreen from "./components/Graph.js";
 const Tab = createMaterialTopTabNavigator();
 function App() {
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.AndroidSafeArea}>
       <NavigationContainer>
-        <Tab.Navigator initialRouteName="Settings">
+        <Tab.Navigator initialRouteName="HomeScreen">
+          <Tab.Screen name="Home" component={HomeScreen} />
           <Tab.Screen name="Gauges" component={GaugeScreen} />
           <Tab.Screen name="Settings" component={SettingsScreen} />
           <Tab.Screen name="Graph" component={GraphScreen} />
@@ -40,5 +43,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  AndroidSafeArea: {
+    flex: 1,
+    backgroundColor: "white",
+    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0
+  }
 });
 export default App;
