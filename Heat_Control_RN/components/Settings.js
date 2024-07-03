@@ -130,6 +130,7 @@ export function SettingsScreen({ navigation }) {
 
   const publishMessage = async () => {
     console.log("publishing message");
+    console.log("publishing message");
     if (!client.isConnected()) {
       console.log("Client is not connected. Attempting to reconnect...");
       try {
