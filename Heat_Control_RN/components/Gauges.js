@@ -4,6 +4,7 @@ import Paho from "paho-mqtt";
 import { useEffect, useState } from "react";
 import { Button, View, Text } from "react-native";
 
+
 /************************************
  *    Creating a new MQTT client    *
  *              start               *
@@ -30,9 +31,9 @@ export function GaugeScreen({ navigation }) {
    *          State variable          *
    *              start               *
    * **********************************/
-  const [value1, setValue1] = React.useState("");
-  const [value2, setValue2] = React.useState("");
-  const [value3, setValue3] = React.useState("");
+  const [value4, setValue4] = React.useState("");
+  const [value5, setValue5] = React.useState("");
+  const [value6, setValue6] = React.useState("");
   const [isConnected, setIsConnected] = useState(false);
   /************************************
    *          State variable          *
@@ -49,9 +50,9 @@ export function GaugeScreen({ navigation }) {
     function onConnect() {
       console.log("Connected!");
       setIsConnected(true);
-      client.subscribe("topic1");
-      client.subscribe("topic2");
-      client.subscribe("topic3");
+      client.subscribe("topic4");
+      client.subscribe("topic5");
+      client.subscribe("topic6");
       // client.subscribe("topic3");
     }
 
@@ -67,13 +68,16 @@ export function GaugeScreen({ navigation }) {
      * *********************************************/
     function onMessageReceived(message) {
       console.log("Message received:", message.payloadString);
-      if (message.destinationName === "topic1") {
-        setValue1(parseInt(message.payloadString));
-      } else if (message.destinationName === "topic2") {
-        setValue2(parseInt(message.payloadString));
-      } else if (message.destinationName === "topic3") {
-        setValue3(parseInt(message.payloadString));
+      if (message.destinationName === "topic4") {
+        setValue4(parseInt(message.payloadString));
       }
+       else if (message.destinationName === "topic5") {
+        setValue5(parseInt(message.payloadString));
+      }
+       else if (message.destinationName === "topic6") {
+        setValue6(parseInt(message.payloadString));
+      }
+      
     }
     /***********************************************
      *    Function to handle incoming messages     *
@@ -125,24 +129,25 @@ export function GaugeScreen({ navigation }) {
    * ***********************************************************/
 
   function changeValue() {
+    console.log("Client is connected:", isConnected);
     if (!isConnected) {
       console.log("Client is not connected.");
       return;
     }
 
-    let message = new Paho.Message("1");
-    message.destinationName = "inTopic";
-    client.send(message);
-    console.log("Message sent:", message.payloadString);
+    // let message = new Paho.Message("1");
+    // message.destinationName = "inTopic";
+    // client.send(message);
+    // console.log("Message sent:", message.payloadString);
 
     //Reset the value after 5 seconds and set the value back to 0
-    setTimeout(() => {
-      setValue(0);
-      message = new Paho.Message("0");
-      message.destinationName = "inTopic";
-      client.send(message);
-      console.log("Message sent:", message.payloadString);
-    }, 5000);
+    // setTimeout(() => {
+    //   setValue(0);
+    //   message = new Paho.Message("0");
+    //   message.destinationName = "inTopic";
+    //   client.send(message);
+    //   console.log("Message sent:", message.payloadString);
+    // }, 5000);
   }
 
   /**************************************************************
@@ -150,18 +155,14 @@ export function GaugeScreen({ navigation }) {
    *                           end                              *
    * ***********************************************************/
   return (
+    console.log("value4", value4),
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
       <Text>Gauges</Text>
       <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          width: "10%",
-        }}
       >
-        <Text>{value1}</Text>
-        <Text>{value2}</Text>
-        <Text>{value3}</Text>
+        <Text>{"value 4 = " + value4 + "\n"}</Text>
+        <Text>{"value 5 = " + value5 + "\n"}</Text>
+        <Text>{"value 6 = " + value6}</Text>
       </View>
       {/* <Button
         title="Go to Settings"
