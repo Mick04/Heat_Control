@@ -3,17 +3,12 @@ import * as React from "react";
 import Paho from "paho-mqtt";
 import { useEffect, useState } from "react";
 import {
-  Button,
   View,
   Text,
-  TextInput,
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
-  Modal,
 } from "react-native";
-import RNPickerSelect from "react-native-picker-select";
-import { Picker } from "@react-native-picker/picker"; // Import the native picker
 
 // Import custom components for time and temperature selection
 import DatePickerModal from "./DatePickerModal"; // Adjust the path as necessary
@@ -35,7 +30,7 @@ const client = new Paho.Client(
  *                end               *
  * **********************************/
 
-export function SettingsScreen({ navigation }) {
+export function SettingsScreen() {
 
 //code added from DateTimePicker
 // line's 41-53 useState for the time and temperature

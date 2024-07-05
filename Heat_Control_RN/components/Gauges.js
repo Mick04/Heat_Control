@@ -2,8 +2,8 @@
 import * as React from "react";
 import Paho from "paho-mqtt";
 import { useEffect, useState } from "react";
-import { Button, View, Text } from "react-native";
-
+import { View, Text} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /************************************
  *    Creating a new MQTT client    *
@@ -31,14 +31,28 @@ export function GaugeScreen({ navigation }) {
    *          State variable          *
    *              start               *
    * **********************************/
-  const [value4, setValue4] = React.useState("");
-  const [value5, setValue5] = React.useState("");
-  const [value6, setValue6] = React.useState("");
+  const [outSideTemp, setoutSideTemp] = useState(0);
+  const [inSideTemp, setinSideTemp] = useState(0);
+  const [controlTemp, setcontrolTemp] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
   /************************************
    *          State variable          *
    *                end               *
    * **********************************/
+
+  /************************************
+   *  Effect hook to retrieve data    *
+   *             start                *
+   ***********************************/
+  useEffect(() => {
+    retrieveData("outSideTemp", setoutSideTemp);
+    retrieveData("inSideTemp", setinSideTemp);
+    retrieveData("controlTemp", setcontrolTemp);
+  }, []);
+  /************************************
+   *  Effect hook to retrieve data    *
+   *               end                *
+   ***********************************/
 
   /********************************************************************
    *   Effect hook to establish MQTT connection and handle messages   *
@@ -46,21 +60,25 @@ export function GaugeScreen({ navigation }) {
    * ******************************************************************/
 
   useEffect(() => {
-    // Function to handle successful connection
     function onConnect() {
       console.log("Connected!");
       setIsConnected(true);
       client.subscribe("topic4");
       client.subscribe("topic5");
       client.subscribe("topic6");
-      // client.subscribe("topic3");
     }
-
-    // Function to handle connection failure
+    /************************************
+     *  Function to handle failure      *
+     *             start                *
+     ***********************************/ 
     function onFailure() {
       console.log("Failed to connect!");
       setIsConnected(false);
     }
+    /************************************
+     * Function to handle failure       *
+     *              end                 *
+     ***********************************/
 
     /***********************************************
      *    Function to handle incoming messages     *
@@ -69,15 +87,17 @@ export function GaugeScreen({ navigation }) {
     function onMessageReceived(message) {
       console.log("Message received:", message.payloadString);
       if (message.destinationName === "topic4") {
-        setValue4(parseInt(message.payloadString));
+        setoutSideTemp(parseInt(message.payloadString));
+        storeData("outSideTemp", message.payloadString); // Store updated value
       }
-       else if (message.destinationName === "topic5") {
-        setValue5(parseInt(message.payloadString));
+      // else if (message.destinationName === "topic3") {
+      else if (message.destinationName === "topic5") {
+        setinSideTemp(parseInt(message.payloadString));
+        storeData("inSideTemp", message.payloadString); // Store updated value
+      } else if (message.destinationName === "topic6") {
+        setcontrolTemp(parseInt(message.payloadString));
+        storeData("controlTemp", message.payloadString); // Store updated value
       }
-       else if (message.destinationName === "topic6") {
-        setValue6(parseInt(message.payloadString));
-      }
-      
     }
     /***********************************************
      *    Function to handle incoming messages     *
@@ -123,57 +143,62 @@ export function GaugeScreen({ navigation }) {
    *                            end                            *
    * ***********************************************************/
 
+   /******************************************
+    *       Function to store data           *
+    *                start                   *
+    ******************************************/
+  const storeData = async (key, value) => {
+    try {
+      await AsyncStorage.setItem(key, value);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+   /******************************************
+    *       Function to store data           *
+    *                  End                   *
+    ******************************************/
+
+   /*******************************************
+    *      Function to retrieve data          *
+    *               start                     *
+    * *****************************************/
+
+  const retrieveData = async (key, setState) => {
+    try {
+      const value = await AsyncStorage.getItem(key);
+      if (value !== null) {
+        setState(parseInt(value)); // Update state with retrieved value
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+    /*******************************************
+     *     Function to retrieve data           *
+     *                 End                     *
+     * *****************************************/
+
   /*************************************************************
    *         Function to change the value and send it          *
    *                          start                            *
    * ***********************************************************/
-
-  function changeValue() {
-    console.log("Client is connected:", isConnected);
-    if (!isConnected) {
-      console.log("Client is not connected.");
-      return;
-    }
-
-    // let message = new Paho.Message("1");
-    // message.destinationName = "inTopic";
-    // client.send(message);
-    // console.log("Message sent:", message.payloadString);
-
-    //Reset the value after 5 seconds and set the value back to 0
-    // setTimeout(() => {
-    //   setValue(0);
-    //   message = new Paho.Message("0");
-    //   message.destinationName = "inTopic";
-    //   client.send(message);
-    //   console.log("Message sent:", message.payloadString);
-    // }, 5000);
-  }
 
   /**************************************************************
    *         Function to change the value and send it           *
    *                           end                              *
    * ***********************************************************/
   return (
-    console.log("value4", value4),
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Text>Gauges</Text>
-      <View
-      >
-        <Text>{"value 4 = " + value4 + "\n"}</Text>
-        <Text>{"value 5 = " + value5 + "\n"}</Text>
-        <Text>{"value 6 = " + value6}</Text>
+    (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <Text style={{ fontSize: 24,color:"red"}}>Gauges</Text>
+        <View>
+          <Text style={{ marginTop: 20, fontSize: 20 }}>{"outSideTemp = " + outSideTemp + "\n"}</Text>
+          <Text style={{ fontSize: 20}}>{"inSideTemp = " + inSideTemp + "\n"}</Text>
+          <Text style={{ fontSize: 20}}>{"controlTemp = " + controlTemp}</Text>
+        </View>
       </View>
-      {/* <Button
-        title="Go to Settings"
-        onPress={() => {
-          navigation.navigate("Settings", {
-            itemId: 86,
-            otherParam: "anything you want here",
-          });
-        }}
-      /> */}
-    </View>
+    )
   );
 }
 
