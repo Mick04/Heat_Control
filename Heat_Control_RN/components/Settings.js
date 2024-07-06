@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Import custom components for time and temperature selection
 import DatePickerModal from "./DatePickerModal"; // Adjust the path as necessary
@@ -31,10 +32,9 @@ const client = new Paho.Client(
  * **********************************/
 
 export function SettingsScreen() {
-
-//code added from DateTimePicker
-// line's 41-53 useState for the time and temperature
-const [Reset, setReset] = useState(true);
+  //code added from DateTimePicker
+  // line's 41-53 useState for the time and temperature
+  const [Reset, setReset] = useState(true);
   const [amTemperature, setAmTemperature] = useState(null);
   const [pmTemperature, setPmTemperature] = useState(null);
   const [isAMDatePickerVisible, setAMDatePickerVisibility] = useState(false);
@@ -49,24 +49,21 @@ const [Reset, setReset] = useState(true);
 
   // Function to handle AM time change
   const handleTimeChangeAM = (AMtime) => {
-    setAMTime(AMtime);
-    console.log(AMtime);
+    setAMTime(AMtime);;
     handleCloseAMDatePicker();
   };
   // Function to handle PM time change
   const handleTimeChangePM = (PMtime) => {
     setPMTime(PMtime);
-    console.log(PMtime);
     handleClosePMDatePicker();
   };
 
   // Toggle the reset state and log current state for debugging
   const handleOnPress = () => {
     setReset(!Reset);
-    if (!Reset){
-    publishMessage(); // Invoke the function here
-  }
-    console.log({ Reset });
+    if (!Reset) {
+      publishMessage(); // Invoke the function here
+    }
   };
 
   // const [open, setOpen] = useState(false); // opens and closes the modal
@@ -83,6 +80,37 @@ const [Reset, setReset] = useState(true);
    *          State variable          *
    *                end               *
    * **********************************/
+  /************************************
+   *  Effect hook to retrieve data    *
+   *             start                *
+   ***********************************/
+  useEffect(() => {
+    retrieveData("amTemperature", setAmTemperature);
+    retrieveData("pmTemperature", setPmTemperature);
+    retrieveData("AMtime", setAMTime);
+    retrieveData("PMtime", setPMTime);
+  }, []);
+  /************************************
+   *  Effect hook to retrieve data    *
+   *               end                *
+   ***********************************/
+
+  // Store data into AsyncStorage whenever the state changes
+  useEffect(() => {
+    storeData("amTemperature", amTemperature);
+  }, [amTemperature]);
+
+  useEffect(() => {
+    storeData("pmTemperature", pmTemperature);
+  }, [pmTemperature]);
+
+  useEffect(() => {
+    storeData("AMtime", AMtime);
+  }, [AMtime]);
+
+  useEffect(() => {
+    storeData("PMtime", PMtime);
+  }, [PMtime]);
 
   /********************************************************************
    *   Effect hook to establish MQTT connection and handle messages   *
@@ -111,14 +139,15 @@ const [Reset, setReset] = useState(true);
      *                   start                     *
      * *********************************************/
     function onMessageReceived(message) {
-      console.log("Message received:", message.payloadString);
+      console.log("Message received:");
       if (message.destinationName === "amTemperature") {
-        setValue1(parseInt(message.payloadString));
+        setValue1(message.payloadString);
       } else if (message.destinationName === "pmTemperature") {
-        setValue2(parseInt(message.payloadString));
+        setValue2(message.payloadString);
       } else if (message.destinationName === "AMtime") {
-        setValue3(parseInt(message.payloadString));
-
+        setValue3(message.payloadString);
+      } else if (message.destinationName === "AMtime") {
+        setValue4(message.payloadString);
       }
     }
     /***********************************************
@@ -145,7 +174,7 @@ const [Reset, setReset] = useState(true);
      *                  start                      *
      * *********************************************/
 
-    client.onMessageArrived = onMessageReceived;
+    // client.onMessageArrived = onMessageReceived;
 
     /***********************************************
      *           Set the message handler            *
@@ -180,15 +209,19 @@ const [Reset, setReset] = useState(true);
 
     const message = new Paho.Message(amTemperature.toString());
     message.destinationName = "topic1";
+    await storeData("amTemperature", message.payloadString); // Store updated value
 
     const message2 = new Paho.Message(pmTemperature.toString());
     message2.destinationName = "topic2";
+    await storeData("pmTemperature", message2.payloadString); // Store updated value
 
     const message3 = new Paho.Message(AMtime.toString());
     message3.destinationName = "topic3";
+    await storeData("AMtime", message3.payloadString); // Store updated value
 
     const message4 = new Paho.Message(PMtime.toString());
     message4.destinationName = "topic4";
+    await storeData("PMtime", message4.payloadString); // Store updated value
     const sendMessages = async () => {
       try {
         await Promise.all([
@@ -204,101 +237,137 @@ const [Reset, setReset] = useState(true);
       }
     };
 
-    sendMessages().catch(err => console.error("Failed to send messages:", err));
+    sendMessages().catch((err) =>
+      console.error("Failed to send messages:", err)
+    );
   };
 
-  // function handleOnPress() {
-  //   setOpen(!open);
-  // }
+  /******************************************
+   *       Function to store data           *
+   *                start                   *
+   ******************************************/
+  const storeData = async (key, value) => {
+    try {
+      if (value !== null) {
+        await AsyncStorage.setItem(key, value.toString());
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+  /******************************************
+   *       Function to store data           *
+   *                  End                   *
+   ******************************************/
+
+  /*******************************************
+   *      Function to retrieve data          *
+   *               start                     *
+   * *****************************************/
+
+  const retrieveData = async (key, setState) => {
+    try {
+      const value = await AsyncStorage.getItem(key);
+      if (value !== null) {
+        setState(value); // Update state with retrieved value
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
+  /*******************************************
+   *     Function to retrieve data           *
+   *                 End                     *
+   * *****************************************/
 
   return (
     <SafeAreaView style={styles.container}>
-    <View>
-      {/* Button to toggle the reset state */}
+      <View>
+        {/* Button to toggle the reset state */}
 
-      <TouchableOpacity style={styles.reset} onPress={handleOnPress}>
-        <Text style={styles.dataReset}>
-          {Reset ? "Press To Reset The Time" : "PRESS WHEN FINISHED"}
-        </Text>
-        {/* <Text style={styles.dataReset}>{Reset.toString()}</Text> */}
-      </TouchableOpacity>
-    </View>
-
-    {!Reset && ( // Add this line to conditionally render the TimePicker components START
-      <>
-        {/* TimePicker components for AM and PM times */}
-        <View style={styles.pickerContainer}>
-          {/* TemperaturePicker components for AM temperatures */}
-          <TemperaturePicker
-            label="AM"
-            temperature={amTemperature}
-            onValueChange={setAmTemperature}
-          />
-        </View>
-
-        <TemperaturePicker
-          label="PM"
-          temperature={pmTemperature}
-          onValueChange={setPmTemperature}
-          // onValueChange={(value) => setPmTemperature(value)}
-        />
-        <TouchableOpacity
-          style={styles.reset}
-          onPress={handleOpenAMDatePicker}
-        >
-          <Text style={styles.dataReset}>Select AM Time</Text>
-          <DatePickerModal
-            isVisible={isAMDatePickerVisible}
-            onClose={handleCloseAMDatePicker}
-            onTimeChange={handleTimeChangeAM}
-          />
-          <Text style={styles.dataText}>AM Time {AMtime}</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity onPress={handleOpenPMDatePicker}>
-          <Text style={styles.dataReset}>Select PM Time </Text>
-
-          <DatePickerModal
-            isVisible={isPMDatePickerVisible}
-            onClose={handleClosePMDatePicker}
-            onTimeChange={handleTimeChangePM}
-          />
-          <Text style={styles.dataText}>PM Time {PMtime}</Text>
-        </TouchableOpacity>
-      </>
-    )}
-    {/* Add this line to conditionally render the TimePicker components END */}
-
-    {Reset && ( // Add this line to conditionally render the TimePicker components START
-      <>
-        <Text style={styles.temperatureText}>
-          {`AM Temperature:     ${
-            amTemperature !== null ? `${amTemperature}°C` : "Not selected"
-          }`}
-        </Text>
-        <Text style={styles.temperatureText}>
-          {`PM Temperature:    ${
-            pmTemperature !== null ? `${pmTemperature}°C` : "Not selected"
-          }`}
-        </Text>
-      </>
-    )}
-
-    <View style={styles.pickerContainer}>
-      {Reset && ( // Add this line to conditionally render the TimePicker components
-        <>
+        <TouchableOpacity style={styles.reset} onPress={handleOnPress}>
           <Text style={styles.dataReset}>
-            {AMtime !== null ? `${AMtime} AM` : "Not selected"}
+            {Reset ? "Press To Reset The Time" : "PRESS WHEN FINISHED"}
           </Text>
+          {/* <Text style={styles.dataReset}>{Reset.toString()}</Text> */}
+        </TouchableOpacity>
+      </View>
 
-          <Text style={styles.dataReset}>
-            {PMtime !== null ? `${PMtime} PM` : "Not selected"}
+      {!Reset && ( // Add this line to conditionally render the TimePicker components START
+        <>
+          {/* TimePicker components for AM and PM times */}
+          <View style={styles.pickerContainer}>
+            {/* TemperaturePicker components for AM temperatures */}
+            <TemperaturePicker
+              label="AM"
+              temperature={amTemperature}
+              onValueChange={setAmTemperature}
+            />
+          </View>
+
+          <TemperaturePicker
+            label="PM"
+            temperature={pmTemperature}
+            onValueChange={setPmTemperature}
+            // onValueChange={(value) => setPmTemperature(value)}
+          />
+          <TouchableOpacity
+            style={styles.reset}
+            onPress={handleOpenAMDatePicker}
+          >
+            <Text style={styles.dataReset}>Select AM Time</Text>
+            <DatePickerModal
+              isVisible={isAMDatePickerVisible}
+              onClose={handleCloseAMDatePicker}
+              onTimeChange={handleTimeChangeAM}
+            />
+            <Text style={styles.dataText}>AM Time {AMtime}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={handleOpenPMDatePicker}>
+            <Text style={styles.dataReset}>Select PM Time </Text>
+
+            <DatePickerModal
+              isVisible={isPMDatePickerVisible}
+              onClose={handleClosePMDatePicker}
+              onTimeChange={handleTimeChangePM}
+            />
+            <Text style={styles.dataText}>PM Time {PMtime}</Text>
+          </TouchableOpacity>
+        </>
+      )}
+      {/* Add this line to conditionally render the TimePicker components END */}
+
+      {Reset && ( // Add this line to conditionally render the TimePicker components START
+        <>
+          <Text style={styles.temperatureText}>
+            {`AM Temperature:     ${
+              amTemperature !== null ? `${amTemperature}°C` : "Not selected"
+            }`}
+          </Text>
+          <Text style={styles.temperatureText}>
+            {`PM Temperature:    ${
+              pmTemperature !== null ? `${pmTemperature}°C` : "Not selected"
+            }`}
           </Text>
         </>
       )}
-      <StatusBar style="auto" />
-    </View>
-  </SafeAreaView>
+
+      <View style={styles.pickerContainer}>
+        {Reset && ( // Add this line to conditionally render the TimePicker components
+          <>
+            <Text style={styles.dataReset}>
+              {AMtime !== null ? `${AMtime} AM` : "Not selected"}
+            </Text>
+
+            <Text style={styles.dataReset}>
+              {PMtime !== null ? `${PMtime} PM` : "Not selected"}
+            </Text>
+          </>
+        )}
+        <StatusBar style="auto" />
+      </View>
+    </SafeAreaView>
   );
 }
 const styles = StyleSheet.create({
@@ -340,4 +409,3 @@ const styles = StyleSheet.create({
 });
 
 export default SettingsScreen;
-

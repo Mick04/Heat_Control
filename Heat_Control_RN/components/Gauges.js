@@ -85,7 +85,7 @@ export function GaugeScreen({ navigation }) {
      *                   start                     *
      * *********************************************/
     function onMessageReceived(message) {
-      console.log("Message received:", message.payloadString);
+      console.log("Message received:");
       if (message.destinationName === "topic4") {
         setoutSideTemp(parseInt(message.payloadString));
         storeData("outSideTemp", message.payloadString); // Store updated value
@@ -179,15 +179,7 @@ export function GaugeScreen({ navigation }) {
      *                 End                     *
      * *****************************************/
 
-  /*************************************************************
-   *         Function to change the value and send it          *
-   *                          start                            *
-   * ***********************************************************/
 
-  /**************************************************************
-   *         Function to change the value and send it           *
-   *                           end                              *
-   * ***********************************************************/
   return (
     (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
