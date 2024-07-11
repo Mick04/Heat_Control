@@ -31,9 +31,9 @@ export function GaugeScreen({ navigation }) {
    *          State variable          *
    *              start               *
    * **********************************/
-  const [outSideTemp, setoutSideTemp] = useState(0);
-  const [inSideTemp, setinSideTemp] = useState(0);
-  const [controlTemp, setcontrolTemp] = useState(0);
+  const [outSide, setoutSideTemp] = useState(0);
+  const [coolSide, setinSideTemp] = useState(0);
+  const [heater, setcontrolTemp] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
   /************************************
    *          State variable          *
@@ -45,9 +45,9 @@ export function GaugeScreen({ navigation }) {
    *             start                *
    ***********************************/
   useEffect(() => {
-    retrieveData("outSideTemp", setoutSideTemp);
-    retrieveData("inSideTemp", setinSideTemp);
-    retrieveData("controlTemp", setcontrolTemp);
+    retrieveData("outSide", setoutSideTemp);
+    retrieveData("coolSide", setinSideTemp);
+    retrieveData("heater", setcontrolTemp);
   }, []);
   /************************************
    *  Effect hook to retrieve data    *
@@ -63,9 +63,9 @@ export function GaugeScreen({ navigation }) {
     function onConnect() {
       console.log("Connected!");
       setIsConnected(true);
-      client.subscribe("topic4");
-      client.subscribe("topic5");
-      client.subscribe("topic6");
+      client.subscribe("outSide");
+      client.subscribe("coolSide");
+      client.subscribe("heater");
     }
     /************************************
      *  Function to handle failure      *
@@ -86,17 +86,17 @@ export function GaugeScreen({ navigation }) {
      * *********************************************/
     function onMessageReceived(message) {
       console.log("Message received:");
-      if (message.destinationName === "topic4") {
+      if (message.destinationName === "outSide") {
         setoutSideTemp(parseInt(message.payloadString));
-        storeData("outSideTemp", message.payloadString); // Store updated value
+        storeData("outSide", message.payloadString); // Store updated value
       }
       // else if (message.destinationName === "topic3") {
-      else if (message.destinationName === "topic5") {
+      else if (message.destinationName === "coolSide") {
         setinSideTemp(parseInt(message.payloadString));
-        storeData("inSideTemp", message.payloadString); // Store updated value
-      } else if (message.destinationName === "topic6") {
+        storeData("coolSide", message.payloadString); // Store updated value
+      } else if (message.destinationName === "heater") {
         setcontrolTemp(parseInt(message.payloadString));
-        storeData("controlTemp", message.payloadString); // Store updated value
+        storeData("heater", message.payloadString); // Store updated value
       }
     }
     /***********************************************
@@ -185,9 +185,9 @@ export function GaugeScreen({ navigation }) {
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
         <Text style={{ fontSize: 24,color:"red"}}>Gauges</Text>
         <View>
-          <Text style={{ marginTop: 20, fontSize: 20 }}>{"outSideTemp = " + outSideTemp + "\n"}</Text>
-          <Text style={{ fontSize: 20}}>{"inSideTemp = " + inSideTemp + "\n"}</Text>
-          <Text style={{ fontSize: 20}}>{"controlTemp = " + controlTemp}</Text>
+          <Text style={{ marginTop: 20, fontSize: 20 }}>{"outSide = " + outSide + "\n"}</Text>
+          <Text style={{ fontSize: 20}}>{"coolSide = " + coolSide + "\n"}</Text>
+          <Text style={{ fontSize: 20}}>{"heater = " + heater}</Text>
         </View>
       </View>
     )

@@ -9,7 +9,9 @@ export default function DatePickerModal({ isVisible, onClose, onTimeChange }) {
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
         <Text>Choose a time:</Text>
-          <DatePicker mode="time" selected="time" onTimeChange={onTimeChange} />
+          <DatePicker mode="time" selected="time" onTimeChange={onTimeChange}  minuteInterval={1}/> 
+
+          {/* // Set minute interval to 1 */}
           {/* <TouchableOpacity onPress={onClose}>
             <Text>Close</Text>
           </TouchableOpacity> */}

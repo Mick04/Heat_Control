@@ -49,7 +49,7 @@ export function SettingsScreen() {
 
   // Function to handle AM time change
   const handleTimeChangeAM = (AMtime) => {
-    setAMTime(AMtime);;
+    setAMTime(AMtime);
     handleCloseAMDatePicker();
   };
   // Function to handle PM time change
@@ -122,10 +122,11 @@ export function SettingsScreen() {
     function onConnect() {
       console.log("Connected!");
       setIsConnected(true);
-      client.subscribe("topic1");
-      client.subscribe("topic2");
-      client.subscribe("topic3");
-      client.subscribe("topic4");
+      client.subscribe("control");
+      client.subscribe("amTemperature");
+      client.subscribe("pmTemperature");
+      client.subscribe("AMtime");
+      client.subscribe("PMtime");
     }
 
     // Function to handle connection failure
@@ -207,23 +208,35 @@ export function SettingsScreen() {
       }
     }
 
+    const messageN = new Paho.Message("N");
+    messageN.destinationName = "control";
+
+    const messageF = new Paho.Message("F");
+    messageF.destinationName = "control";
+
     const message = new Paho.Message(amTemperature.toString());
-    message.destinationName = "topic1";
+    message.destinationName = "amTemperature";
     await storeData("amTemperature", message.payloadString); // Store updated value
 
     const message2 = new Paho.Message(pmTemperature.toString());
-    message2.destinationName = "topic2";
+    message2.destinationName = "pmTemperature";
     await storeData("pmTemperature", message2.payloadString); // Store updated value
 
     const message3 = new Paho.Message(AMtime.toString());
-    message3.destinationName = "topic3";
+    message3.destinationName = "AMtime";
     await storeData("AMtime", message3.payloadString); // Store updated value
 
     const message4 = new Paho.Message(PMtime.toString());
-    message4.destinationName = "topic4";
+    message4.destinationName = "PMtime";
     await storeData("PMtime", message4.payloadString); // Store updated value
+
     const sendMessages = async () => {
       try {
+        // Send "N" to indicate the start of the sequence
+        await client.send(messageN);
+        console.log("Start indicator sent");
+
+        // Send the temperature and time data messages
         await Promise.all([
           client.send(message),
           client.send(message2),
@@ -231,6 +244,13 @@ export function SettingsScreen() {
           client.send(message4),
         ]);
         console.log("messages sent");
+        setTimeout(function () {
+          // Code to execute after delay
+          console.log("This message is displayed after a 2-second delay");
+        }, 10000);
+        // Send "F" to indicate the end of the sequence
+        await client.send(messageF);
+        console.log("End indicator sent");
       } catch (err) {
         console.log("error code", err);
         console.log(err);
