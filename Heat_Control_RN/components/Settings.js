@@ -140,7 +140,6 @@ export function SettingsScreen() {
      *                   start                     *
      * *********************************************/
     function onMessageReceived(message) {
-      console.log("Message received:");
       if (message.destinationName === "amTemperature") {
         setValue1(message.payloadString);
       } else if (message.destinationName === "pmTemperature") {
@@ -149,6 +148,8 @@ export function SettingsScreen() {
         setValue3(message.payloadString);
       } else if (message.destinationName === "AMtime") {
         setValue4(message.payloadString);
+        console.log("Message received:");
+        console.log(message.payloadString);
       }
     }
     /***********************************************
@@ -244,6 +245,7 @@ export function SettingsScreen() {
           client.send(message4),
         ]);
         console.log("messages sent");
+
         setTimeout(function () {
           // Code to execute after delay
           console.log("This message is displayed after a 2-second delay");

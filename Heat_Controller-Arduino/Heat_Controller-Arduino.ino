@@ -73,8 +73,7 @@ const long interval = 5000;
 /********************************************
       settup the time variables end
  * ******************************************/
-// void readData(uint_fast8_t amHours, uint_fast8_t Day_Minuts, uint_fast8_t amTemp);
-// void writeData(int dayHours, int dayMinuts, int dayTemp);
+
 /********************************************
       wifi and pubSup credentials start
  * ******************************************/
@@ -94,8 +93,8 @@ long int value = 0;
       wifi and pubSup credentials end
  * ******************************************/
 // Timer-related variables
-unsigned long heaterOnTime = 0;             // <--- Highlighted line
-const unsigned long heaterTimeout = 60000;  // <--- Highlighted line
+unsigned long heaterOnTime = 0;
+const unsigned long heaterTimeout = 60000;
 bool heaterOn = false;
 
 // Function prototypes
@@ -105,8 +104,8 @@ void reconnect();
 void publishTempToMQTT();
 void relay_Control();
 void sendSensor();
-void startHeaterTimer();    // <--- Highlighted line
-void checkHeaterTimeout();  // <--- Highlighted line
+void startHeaterTimer();
+void checkHeaterTimeout();
 
 
 /********************************************
@@ -196,7 +195,7 @@ void loop() {
   Minutes = timeClient.getMinutes();
   seconds = timeClient.getSeconds();
   Am = true;
-  // Am = (Hours < 12);
+  Am = (Hours < 12);
   if (heaterOn) {
     Serial.println("201 checkHeaterTimeout()");
     checkHeaterTimeout();
@@ -259,18 +258,10 @@ void callback(char *topic, byte *payload, unsigned int length) {
     }
     if (strstr(topic, "AMtime")) {
       sscanf((char *)payload, "%d:%d", &amHours, &amMinutes);  // if topic = AMtime then AMtime = payload
-      // Serial.print("*************************amHours = ");
-      // Serial.print(amHours);
-      // Serial.print(". amMinutes = ");
-      // Serial.println(amMinutes);
     }
 
     if (strstr(topic, "PMtime")) {
       sscanf((char *)payload, "%d:%d", &pmHours, &pmMinutes);  // if topic = night_h then pmHours = payload Serial.print("AMtime = ");
-      // Serial.print("++++++++++++++++++++++++++pmHours = ");
-      // Serial.print(pmHours);
-      // Serial.print("  pmMinutes = ");
-      // Serial.println(pmMinutes);
     }
   }
 }
@@ -318,12 +309,6 @@ void reconnect() {
 
 void relay_Control() {
   currentMillis = millis();
-  Serial.print("371 heaterOn = ");
-  Serial.print(heaterOn);
-  Serial.print("  amTemp = ");
-  Serial.print(amTemp);
-  Serial.print("  s3 = ");
-  Serial.println(s3);
   if (Am == true) {
     if (s3 < amTemp) {
       digitalWrite(Relay_Pin, HIGH);
@@ -339,17 +324,12 @@ void relay_Control() {
   }
 
   if (Am == false) {
-    // Serial.print("line 332 pmTemp = ");
-    // Serial.print(pmTemp);
-    // Serial.print(". s3 = ");
-    // Serial.println(s3);
     if (s3 < pmTemp) {
       // Serial.print("281 heaterOn =  ");
       // Serial.println(heaterOn);
       digitalWrite(Relay_Pin, HIGH);
       digitalWrite(LED_Pin, LOW);  // builtin LED_Pin on
       if (!heaterOn) {
-        Serial.println("340 !heaterOn ++++++++++++++=");
         startHeaterTimer();
       }
     } else if (s3 > pmTemp) {
@@ -372,17 +352,29 @@ void relay_Control() {
                   start
 * ******************************************/
 void publishTempToMQTT(void) {
+    if (!client.connected()) {
+    // Reconnect to MQTT broker if necessary
+   reconnect();
+  }
   // Serial.println("publishTempToMQTT");
   char sensVal[50];
   float myFloat1 = s1;
   sprintf(sensVal, "%f", myFloat1);
   client.publish("outSide", sensVal);
-  float mysensor2 = s2;
-  sprintf(sensVal, "%f", mysensor2);
+  Serial.print("outSide = ");
+  Serial.println(myFloat1);
+
+  float myFloat2 = s2;
+  sprintf(sensVal, "%f", myFloat2);
   client.publish("coolSide", sensVal);
+  Serial.print("coolSide = ");
+  Serial.println(myFloat2);
+
   float myFloat3 = s3;
   sprintf(sensVal, "%f", myFloat3);
   client.publish("heater", sensVal);
+  Serial.print("heater = ");
+  Serial.println(myFloat3);
 }
 
 /********************************************
@@ -465,60 +457,43 @@ void sendSensor() {
   ************************************************************/
 
   celsius = (float)raw / 16.0;
-  // if(adr == 228)  {        //inside board out side dial
+  //if (adr == 228) {  //inside board out side dial
   // if(adr == 89)  {        //outside board out side dial
   if (adr == 49) {
     // test rig board out side dial
     // change celsius to fahrenheit if you prefer output in Fahrenheit;
     s1 = (celsius);  // BLUE outside
   }
-  // if(adr == 197)  {        //inside boade Heater dial
+  //if (adr == 197) {  //inside boade Heater dial
   // if(adr == 96)  {        //out side board  Heater dial
   if (adr == 59) {   // out side board  Heater dial
                      // change celsius to fahrenheit if you prefer output in Fahrenheit;
-    s2 = (celsius);  //GREEN coolSide
+    s2 = (celsius);  //GREEN coolSide (adr == 59)
   }
-  // if(adr == 92)  {    //inside board inSide dial
+  //if (adr == 92) {   //inside board inSide dial
   // if(adr == 116)  {    // outside board inSide dial
   if (adr == 181) {  // Test rig board inSide dial
                      // change celsius to fahrenheit if you prefer output in Fahrenheit;
     s3 = (celsius);  //Heater RED heater
   }
   if (Am == true) {
-    Serial.print("486 Hours = ");
-    Serial.print(Hours);
-    Serial.print("  pmHours = ");
-    Serial.print(pmHours);
-    Serial.print(". Minutes = ");
-    Serial.print(Minutes);
-    Serial.print(".  pmMinutes = ");
-    Serial.println(pmMinutes);
+    Serial.print("amHours = ");
+    Serial.println(amHours);
     if (amHours == Hours) {  // set amTemp for the Night time setting
 
       if (amMinutes >= Minutes && amMinutes <= Minutes) {
-        Serial.print("499. Minutes = ");
-        Serial.print(Minutes);
-        Serial.print(".  pmMinutes = ");
-        Serial.println(pmMinutes);
         amTemp = amTemperature;
       }
     }
   }
   if (Am == false) {
-    Serial.print("486 Hours = ");
-    Serial.print(Hours);
-    Serial.print("  pmHours = ");
-    Serial.print(pmHours);
-    Serial.print(". Minutes = ");
-    Serial.print(Minutes);
-    Serial.print(".  pmMinutes = ");
-    Serial.println(pmMinutes);
+ Serial.print("pmHours = ");
+    Serial.println(pmHours);
     if (pmHours == Hours) {  // set pmTemp for the Night time setting
-      // Serial.print("489 pmHours = ");
-      // Serial.println(pmHours);
-
-      // Serial.print("492 Minutes = ");
-      // Serial.println(Minutes);
+      Serial.print("pmMinutes = ");
+    Serial.print(pmMinutes);
+      Serial.print(". Minutes = ");
+    Serial.println(Minutes);
       if (pmMinutes >= Minutes && pmMinutes <= Minutes)
       // Serial.println("????????????????????????? 440");
       {
@@ -544,14 +519,13 @@ void startHeaterTimer() {
 }
 
 void checkHeaterTimeout() {
-  // Serial.println("XXXXXXXXXXXXXXXXXX void checkHeaterTimeout");
+  Serial.println("XXXXXXXXXXXXXXXXXX void checkHeaterTimeout");
   if (heaterOn && (millis() - heaterOnTime > heaterTimeout)) {
     Serial.println("QQQQQQQQQQQQQQQQQQ line 516");
-    if (s3 < amTemp)  // Check if the temperature is still below the threshold
-      Serial.println("WWWWWWWWWWWWWWWW line 518");
+    if (s3 < amTemp || s3 < pmTemp)  // Check if the temperature is still below the threshold
     {
       client.publish("heaterStatus", "Temperature did not rise within the expected time.");
-
+Serial.println("WWWWWWWWWWWWWWWW line 518");
       // Optionally, you could send an email or other notification here
     }
     heaterOn = false;
