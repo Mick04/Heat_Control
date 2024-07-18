@@ -13,7 +13,7 @@ const TemperaturePicker = ({ label, temperature, onValueChange }) => {
   // Render native Picker for Android
   if (Platform.OS === "android") {
     // Check if the platform is Android
-    return (
+    return ( 
       // Return the native Picker component
       <View style={styles.container}>
         {/* <Text style={styles.label}>{label}   nnnnTemperature:</Text> */}
