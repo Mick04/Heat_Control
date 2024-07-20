@@ -2,7 +2,7 @@
 import * as React from "react";
 import Paho from "paho-mqtt";
 import { useEffect, useState } from "react";
-import { View, Text} from "react-native";
+import { View, Text } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /************************************
@@ -34,6 +34,8 @@ export function GaugeScreen({ navigation }) {
   const [outSide, setoutSideTemp] = useState(0);
   const [coolSide, setinSideTemp] = useState(0);
   const [heater, setcontrolTemp] = useState(0);
+  const [amTemperature, setamTemperature] = useState(0);
+  const [pmTemperature, setpmTemperature] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
   /************************************
    *          State variable          *
@@ -48,6 +50,8 @@ export function GaugeScreen({ navigation }) {
     retrieveData("outSide", setoutSideTemp);
     retrieveData("coolSide", setinSideTemp);
     retrieveData("heater", setcontrolTemp);
+    retrieveData("amTemperature", setamTemperature);
+    retrieveData("pmTemperature", setpmTemperature);
   }, []);
   /************************************
    *  Effect hook to retrieve data    *
@@ -66,11 +70,13 @@ export function GaugeScreen({ navigation }) {
       client.subscribe("outSide");
       client.subscribe("coolSide");
       client.subscribe("heater");
+      client.subscribe("amTemperature");
+      client.subscribe("pmTemperature");
     }
     /************************************
      *  Function to handle failure      *
      *             start                *
-     ***********************************/ 
+     ***********************************/
     function onFailure() {
       console.log("Failed to connect!");
       setIsConnected(false);
@@ -85,7 +91,7 @@ export function GaugeScreen({ navigation }) {
      *                   start                     *
      * *********************************************/
     function onMessageReceived(message) {
-      console.log("Message received:");
+      // console.log("Message received:");
       if (message.destinationName === "outSide") {
         setoutSideTemp(parseInt(message.payloadString));
         storeData("outSide", message.payloadString); // Store updated value
@@ -97,6 +103,10 @@ export function GaugeScreen({ navigation }) {
       } else if (message.destinationName === "heater") {
         setcontrolTemp(parseInt(message.payloadString));
         storeData("heater", message.payloadString); // Store updated value
+      } else if (message.destinationName === "amTemperature") {
+        setamTemperature(parseInt(message.payloadString));
+      } else if (message.destinationName === "pmTemperature") {
+        setpmTemperature(parseInt(message.payloadString));
       }
     }
     /***********************************************
@@ -143,10 +153,10 @@ export function GaugeScreen({ navigation }) {
    *                            end                            *
    * ***********************************************************/
 
-   /******************************************
-    *       Function to store data           *
-    *                start                   *
-    ******************************************/
+  /******************************************
+   *       Function to store data           *
+   *                start                   *
+   ******************************************/
   const storeData = async (key, value) => {
     try {
       await AsyncStorage.setItem(key, value);
@@ -154,15 +164,15 @@ export function GaugeScreen({ navigation }) {
       console.log(e);
     }
   };
-   /******************************************
-    *       Function to store data           *
-    *                  End                   *
-    ******************************************/
+  /******************************************
+   *       Function to store data           *
+   *                  End                   *
+   ******************************************/
 
-   /*******************************************
-    *      Function to retrieve data          *
-    *               start                     *
-    * *****************************************/
+  /*******************************************
+   *      Function to retrieve data          *
+   *               start                     *
+   * *****************************************/
 
   const retrieveData = async (key, setState) => {
     try {
@@ -174,23 +184,28 @@ export function GaugeScreen({ navigation }) {
       console.log(e);
     }
   };
-    /*******************************************
-     *     Function to retrieve data           *
-     *                 End                     *
-     * *****************************************/
-
+  /*******************************************
+   *     Function to retrieve data           *
+   *                 End                     *
+   * *****************************************/
 
   return (
-    (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <Text style={{ fontSize: 24,color:"red"}}>Gauges</Text>
-        <View>
-          <Text style={{ marginTop: 20, fontSize: 20 }}>{"outSide = " + outSide + "\n"}</Text>
-          <Text style={{ fontSize: 20}}>{"coolSide = " + coolSide + "\n"}</Text>
-          <Text style={{ fontSize: 20}}>{"heater = " + heater}</Text>
-        </View>
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <Text style={{ fontSize: 24, color: "green", padding: 10 }}>
+        {"amTemperature = " + amTemperature}{" "}
+      </Text>
+      <Text style={{ fontSize: 24, color: "green" }}>
+        {"pmTemperature = " + pmTemperature}{" "}
+      </Text>
+      <Text style={{ fontSize: 24, color: "red", padding: 10 }}>Gauges</Text>
+      <View>
+        <Text style={{ marginTop: 20, fontSize: 20 }}>
+          {"outSide = " + outSide + "\n"}
+        </Text>
+        <Text style={{ fontSize: 20 }}>{"coolSide = " + coolSide + "\n"}</Text>
+        <Text style={{ fontSize: 20 }}>{"heater = " + heater}</Text>
       </View>
-    )
+    </View>
   );
 }
 
