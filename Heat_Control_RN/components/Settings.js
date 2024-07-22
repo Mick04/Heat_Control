@@ -1,3 +1,5 @@
+
+
 //Setting.js
 import { StatusBar } from "expo-status-bar";
 import * as React from "react";
@@ -10,9 +12,6 @@ import {
   SafeAreaView,
   TouchableOpacity,
 } from "react-native";
-// import AsyncStorage from "@react-native-async-storage/async-storage";
-
-// Import custom components for time and temperature selection
 import DatePickerModal from "./DatePickerModal"; // Adjust the path as necessary
 import TemperaturePicker from "./TemperaturePicker";
 
@@ -33,8 +32,6 @@ const client = new Paho.Client(
  * **********************************/
 
 export function SettingsScreen() {
-  //code added from DateTimePicker
-  // line's 41-53 useState for the time and temperature
   const [Reset, setReset] = useState(true);
   const [amTemperature, setAmTemperature] = useState(null);
   const [pmTemperature, setPmTemperature] = useState(null);
@@ -67,53 +64,6 @@ export function SettingsScreen() {
       publishMessage(); // Invoke the function here
     }
   };
-
-  // const [open, setOpen] = useState(false); // opens and closes the modal
-  // /************************************
-  //  *          State variable          *
-  //  *              start               *
-  //  * **********************************/
-  // const [value1, setValue1] = React.useState("");
-  // const [value2, setValue2] = React.useState("");
-  // const [value3, setValue3] = React.useState("");
-  // const [value4, setValue4] = React.useState("");
-  // const [isConnected, setIsConnected] = useState(false);
-  // /************************************
-  //  *          State variable          *
-  //  *                end               *
-  //  * **********************************/
-  // /************************************
-  //  *  Effect hook to retrieve data    *
-  //  *             start                *
-  //  ***********************************/
-  // useEffect(() => {
-  //   retrieveData("amTemperature", setAmTemperature);
-  //   retrieveData("pmTemperature", setPmTemperature);
-  //   retrieveData("AMtime", setAMTime);
-  //   retrieveData("PMtime", setPMTime);
-  // }, []);
-  // /************************************
-  //  *  Effect hook to retrieve data    *
-  //   *               end                *
-  //   ***********************************/
-
-  // // Store data into AsyncStorage whenever the state changes
-  // useEffect(() => {
-  //   storeData("amTemperature", amTemperature);
-  // }, [amTemperature]);
-
-  // useEffect(() => {
-  //   storeData("pmTemperature", pmTemperature);
-  // }, [pmTemperature]);
-
-  // useEffect(() => {
-  //   storeData("AMtime", AMtime);
-  // }, [AMtime]);
-
-  // useEffect(() => {
-  //   storeData("PMtime", PMtime);
-  // }, [PMtime]);
-
   /********************************************************************
    *   Effect hook to establish MQTT connection and handle messages   *
    *                          start                                   *
@@ -150,8 +100,6 @@ export function SettingsScreen() {
         setAMTime(message.payloadString);
       } else if (message.destinationName === "PMtime") {
         setPMTime(message.payloadString);
-        // console.log("Message received:");
-        // console.log(message.payloadString);
       }
     }
     /***********************************************
@@ -163,11 +111,7 @@ export function SettingsScreen() {
      *          Connect to the MQTT broker         *
      *                   start                     *
      * *********************************************/
-    client.connect({
-      onSuccess: onConnect,
-      onFailure: onFailure,
-    });
-
+  
     /***********************************************r
      *          Connect to the MQTT broker         *
      *                     end                     *
@@ -179,6 +123,7 @@ export function SettingsScreen() {
      * *********************************************/
 
     client.onMessageArrived = onMessageReceived;
+    client.connect({ onSuccess: onConnect, onFailure });
 
     /***********************************************
      *           Set the message handler            *
@@ -229,111 +174,55 @@ export function SettingsScreen() {
     }
   };
 
-  const publishMessage = async () => {
+  const publishMessage = () => {
     console.log("publishing message");
     if (!client.isConnected()) {
       console.log("Client is not connected. Attempting to reconnect...");
-      try {
-        await client.connect(); // Assuming client has a reconnect method
-        console.log("Reconnected successfully.");
-      } catch (err) {
-        console.log("Failed to reconnect:", err);
-        return;
-      }
+      client.connect({
+        onSuccess: () => {
+          console.log("Reconnected successfully.");
+          sendMessages();
+        },
+        onFailure: (err) => {
+          console.log("Failed to reconnect:", err);
+        },
+      });
+    } else {
+      sendMessages();
     }
-
-    const messageN = new Paho.Message("N");
-    messageN.destinationName = "control";
-
-    const messageF = new Paho.Message("F");
-    messageF.destinationName = "control";
-
-    const message = new Paho.Message(amTemperature.toString());
-    message.destinationName = "amTemperature";
-    // await storeData("amTemperature", message.payloadString); // Store updated value
-
-    const message2 = new Paho.Message(pmTemperature.toString());
-    message2.destinationName = "pmTemperature";
-    // await storeData("pmTemperature", message2.payloadString); // Store updated value
-
-    const message3 = new Paho.Message(AMtime.toString());
-    message3.destinationName = "AMtime";
-    // await storeData("AMtime", message3.payloadString); // Store updated value
-
-    const message4 = new Paho.Message(PMtime.toString());
-    message4.destinationName = "PMtime";
-    // await storeData("PMtime", message4.payloadString); // Store updated value
-
-    const sendMessages = async () => {
+    }
+    const sendMessages = () => {
       try {
-        // Send "N" to indicate the start of the sequence
-        await client.send(messageN);
-        console.log("Start indicator sent");
-
-        // Send the temperature and time data messages
-        await Promise.all([
-          client.send(message),
-          client.send(message2),
-          client.send(message3),
-          client.send(message4),
-        ]);
-        console.log("messages sent");
-
-        setTimeout(function () {
-          // Code to execute after delay
-          console.log("This message is displayed after a 2-second delay");
+        const messageN = new Paho.Message("N");
+        messageN.destinationName = "control";
+        client.send(messageN);
+  
+        const message = new Paho.Message(amTemperature.toString());
+        message.destinationName = "amTemperature";
+        client.send(message);
+  
+        const message2 = new Paho.Message(pmTemperature.toString());
+        message2.destinationName = "pmTemperature";
+        client.send(message2);
+  
+        const message3 = new Paho.Message(amTime.toString());
+        message3.destinationName = "AMtime";
+        client.send(message3);
+  
+        const message4 = new Paho.Message(pmTime.toString());
+        message4.destinationName = "PMtime";
+        client.send(message4);
+  
+        setTimeout(() => {
+          const messageF = new Paho.Message("F");
+          messageF.destinationName = "control";
+          client.send(messageF);
         }, 10000);
-        // Send "F" to indicate the end of the sequence
-        await client.send(messageF);
-        console.log("End indicator sent");
+  
       } catch (err) {
-        console.log("error code", err);
-        console.log(err);
+        console.log("Failed to send messages:", err);
       }
     };
-
-    sendMessages().catch((err) =>
-      console.error("Failed to send messages:", err)
-    );
-  };
-
-  // /******************************************
-  //  *       Function to store data           *
-  //  *                start                   *
-  //  ******************************************/
-  // const storeData = async (key, value) => {
-  //   try {
-  //     if (value !== null) {
-  //       await AsyncStorage.setItem(key, value.toString());
-  //     }
-  //   } catch (e) {
-  //     console.log(e);
-  //   }
-  // };
-  // /******************************************
-  //  *       Function to store data           *
-  //  *                  End                   *
-  //  ******************************************/
-
-  // /*******************************************
-  //  *      Function to retrieve data          *
-  //  *               start                     *
-  //  * *****************************************/
-
-  // const retrieveData = async (key, setState) => {
-  //   try {
-  //     const value = await AsyncStorage.getItem(key);
-  //     if (value !== null) {
-  //       setState(value); // Update state with retrieved value
-  //     }
-  //   } catch (e) {
-  //     console.log(e);
-  //   }
-  // };
-  // /*******************************************
-  //  *     Function to retrieve data           *
-  //  *                 End                     *
-  //  * *****************************************/
 
   return (
     <SafeAreaView style={styles.container}>
@@ -344,7 +233,6 @@ export function SettingsScreen() {
           <Text style={styles.dataReset}>
             {Reset ? "Press To Reset The Time" : "PRESS WHEN FINISHED"}
           </Text>
-          {/* <Text style={styles.dataReset}>{Reset.toString()}</Text> */}
         </TouchableOpacity>
       </View>
 
@@ -359,7 +247,6 @@ export function SettingsScreen() {
               onValueChange={setAmTemperature}
             />
           </View>
-
           <TemperaturePicker
             label="PM"
             temperature={pmTemperature}
