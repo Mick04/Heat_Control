@@ -2,7 +2,7 @@
 import * as React from "react";
 import Paho from "paho-mqtt";
 import { useEffect, useState } from "react";
-import { View, Text } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /************************************
@@ -28,17 +28,17 @@ const client = new Paho.Client(
 
 export function GaugeScreen({ navigation }) {
   /************************************
-   *          State variable          *
+   *          State variables         *
    *              start               *
    * **********************************/
-  const [outSide, setoutSideTemp] = useState(0);
-  const [coolSide, setinSideTemp] = useState(0);
-  const [heater, setcontrolTemp] = useState(0);
-  const [amTemperature, setamTemperature] = useState(0);
-  const [pmTemperature, setpmTemperature] = useState(0);
+  const [outSide, setOutSideTemp] = useState(0);
+  const [coolSide, setCoolSideTemp] = useState(0);
+  const [heater, setControlTemp] = useState(0);
+  const [amTemperature, setAmTemperature] = useState(0);
+  const [pmTemperature, setPmTemperature] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
   /************************************
-   *          State variable          *
+   *          State variables         *
    *                end               *
    * **********************************/
 
@@ -47,11 +47,11 @@ export function GaugeScreen({ navigation }) {
    *             start                *
    ***********************************/
   useEffect(() => {
-    retrieveData("outSide", setoutSideTemp);
-    retrieveData("coolSide", setinSideTemp);
-    retrieveData("heater", setcontrolTemp);
-    retrieveData("amTemperature", setamTemperature);
-    retrieveData("pmTemperature", setpmTemperature);
+    retrieveData("outSide", setOutSideTemp);
+    retrieveData("coolSide", setCoolSideTemp);
+    retrieveData("heater", setControlTemp);
+    retrieveData("amTemperature", setAmTemperature);
+    retrieveData("pmTemperature", setPmTemperature);
   }, []);
   /************************************
    *  Effect hook to retrieve data    *
@@ -71,78 +71,45 @@ export function GaugeScreen({ navigation }) {
       client.subscribe("coolSide");
       client.subscribe("heater");
       client.subscribe("amTemperature");
-      client.subscribe("pmTemperature");
+      client.subscribe("pmTemperature",);
     }
-    /************************************
-     *  Function to handle failure      *
-     *             start                *
-     ***********************************/
+
     function onFailure() {
       console.log("Failed to connect!");
       setIsConnected(false);
     }
-    /************************************
-     * Function to handle failure       *
-     *              end                 *
-     ***********************************/
 
-    /***********************************************
-     *    Function to handle incoming messages     *
-     *                   start                     *
-     * *********************************************/
     function onMessageReceived(message) {
-      // console.log("Message received:");
-      if (message.destinationName === "outSide") {
-        setoutSideTemp(parseInt(message.payloadString));
-        storeData("outSide", message.payloadString); // Store updated value
-      }
-      // else if (message.destinationName === "topic3") {
-      else if (message.destinationName === "coolSide") {
-        setinSideTemp(parseInt(message.payloadString));
-        storeData("coolSide", message.payloadString); // Store updated value
-      } else if (message.destinationName === "heater") {
-        setcontrolTemp(parseInt(message.payloadString));
-        storeData("heater", message.payloadString); // Store updated value
-      } else if (message.destinationName === "amTemperature") {
-        setamTemperature(parseInt(message.payloadString));
-      } else if (message.destinationName === "pmTemperature") {
-        setpmTemperature(parseInt(message.payloadString));
+      switch (message.destinationName) {
+        case "outSide":
+          setOutSideTemp(parseInt(message.payloadString));
+          storeData("outSide", message.payloadString);
+          break;
+        case "coolSide":
+          setCoolSideTemp(parseInt(message.payloadString));
+          storeData("coolSide", message.payloadString);
+          break;
+        case "heater":
+          setControlTemp(parseInt(message.payloadString));
+          storeData("heater", message.payloadString);
+          break;
+        case "amTemperature":
+          setAmTemperature(parseInt(message.payloadString));
+          break;
+        case "pmTemperature":
+          setPmTemperature(parseInt(message.payloadString));
+          break;
+        default:
+          console.log("Unknown topic:", message.destinationName);
       }
     }
-    /***********************************************
-     *    Function to handle incoming messages     *
-     *                     end                     *
-     * *********************************************/
 
-    /***********************************************
-     *          Connect to the MQTT broker         *
-     *                   start                     *
-     * *********************************************/
     client.connect({
       onSuccess: onConnect,
       onFailure: onFailure,
     });
 
-    /***********************************************r
-     *          Connect to the MQTT broker         *
-     *                     end                     *
-     * *********************************************/
-
-    /***********************************************
-     *           Set the message handler           *
-     *                  start                      *
-     * *********************************************/
-
     client.onMessageArrived = onMessageReceived;
-
-    /***********************************************
-     *           Set the message handler            *
-     *                      end                     *
-     * *********************************************/
-    /*************************************************************
-     *   Cleanup function to disconnect when component unmounts  *
-     *                         start                             *
-     * ***********************************************************/
 
     return () => {
       client.disconnect();
@@ -166,19 +133,18 @@ export function GaugeScreen({ navigation }) {
   };
   /******************************************
    *       Function to store data           *
-   *                  End                   *
+   *                  end                   *
    ******************************************/
 
   /*******************************************
    *      Function to retrieve data          *
    *               start                     *
-   * *****************************************/
-
+   *******************************************/
   const retrieveData = async (key, setState) => {
     try {
       const value = await AsyncStorage.getItem(key);
       if (value !== null) {
-        setState(parseInt(value)); // Update state with retrieved value
+        setState(parseInt(value));
       }
     } catch (e) {
       console.log(e);
@@ -186,27 +152,94 @@ export function GaugeScreen({ navigation }) {
   };
   /*******************************************
    *     Function to retrieve data           *
-   *                 End                     *
-   * *****************************************/
+   *                 end                     *
+   *******************************************/
+
+  /*******************************************
+   *      Function to reconnect              *
+   *               start                     *
+   *******************************************/
+  const reconnect = () => {
+    if (!client.isConnected()) {
+      console.log("Attempting to reconnect...");
+      client.connect({
+        onSuccess: () => {
+          console.log("Reconnected successfully.");
+          setIsConnected(true);
+          client.subscribe("outSide");
+          client.subscribe("coolSide");
+          client.subscribe("heater");
+          client.subscribe("amTemperature");
+          client.subscribe("pmTemperature");
+        },
+        onFailure: (err) => {
+          console.log("Failed to reconnect:", err);
+          setIsConnected(false);
+        },
+      });
+    } else {
+      console.log("Already connected.");
+    }
+  };
+  /*******************************************
+   *      Function to reconnect              *
+   *                 end                     *
+   *******************************************/
 
   return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Text style={{ fontSize: 24, color: "green", padding: 10 }}>
+    <View style={styles.container}>
+      <Text style={styles.tempText}>
         {"amTemperature = " + amTemperature}{" "}
       </Text>
-      <Text style={{ fontSize: 24, color: "green" }}>
+      <Text style={styles.tempText}>
         {"pmTemperature = " + pmTemperature}{" "}
       </Text>
-      <Text style={{ fontSize: 24, color: "red", padding: 10 }}>Gauges</Text>
-      <View>
-        <Text style={{ marginTop: 20, fontSize: 20 }}>
-          {"outSide = " + outSide + "\n"}
-        </Text>
-        <Text style={{ fontSize: 20 }}>{"coolSide = " + coolSide + "\n"}</Text>
-        <Text style={{ fontSize: 20 }}>{"heater = " + heater}</Text>
+      <Text style={styles.heading}>Gauges</Text>
+      <View style={styles.tempContainer}>
+        <Text style={styles.tempText}>{"outSide = " + outSide + "\n"}</Text>
+        <Text style={styles.tempText}>{"coolSide = " + coolSide + "\n"}</Text>
+        <Text style={styles.tempText}>{"heater = " + heater}</Text>
       </View>
+      <View style={styles.connectionStatus}>
+        <Text style={{ color: isConnected ? "green" : "red" }}>
+          {isConnected ? "Connected to MQTT Broker" : "Disconnected from MQTT Broker"}
+        </Text>
+      </View>
+      <TouchableOpacity style={styles.reconnectButton} onPress={reconnect}>
+        <Text style={styles.reconnectText}>Reconnect</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  tempText: {
+    fontSize: 24,
+    color: "green",
+    padding: 10,
+  },
+  heading: {
+    fontSize: 24,
+    color: "red",
+    padding: 10,
+  },
+  tempContainer: {
+    marginTop: 20,
+  },
+  reconnectButton: {
+    backgroundColor: "blue",
+    padding: 10,
+    margin: 10,
+    borderRadius: 5,
+  },
+  reconnectText: {
+    color: "white",
+    fontSize: 20,
+  },
+});
 export default GaugeScreen;

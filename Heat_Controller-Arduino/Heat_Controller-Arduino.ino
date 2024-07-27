@@ -14,7 +14,7 @@
 #include <ESP_Mail_Client.h>
 
 // Define pins and other constants
-#define Relay_Pin D5  // active board
+#define Relay_Pin D5 // active board
 #define LED_Pin 13    // on board LED_Pin
 // #define LED_Pin D6//LED_Pin  //change when debuged
 OneWire ds(D7);  // active board  // on pin 10 (a 4.7K resistor is necessary)
@@ -49,7 +49,7 @@ uint_fast8_t Night_seconds;
 uint_fast8_t temp;
 bool Am;
 bool Reset = false;  // set when slider is moved
-bool StartUp = 0;
+bool StartUp = 1;
 bool Timer = 1;
 
 /********************************************
@@ -219,6 +219,12 @@ void loop() {
     Serial.println("201 checkHeaterTimeout()");
     checkHeaterTimeout();
   }
+  Serial.print("Hours = ");
+  Serial.println(Hours);
+  Serial.print("pmTemperature = ");
+  Serial.println(pmTemperature);
+  Serial.print("amTemperature = ");
+  Serial.println(amTemperature);
 }
 /********************************************
   *       connect to the internet start.      *
@@ -302,6 +308,10 @@ void reconnect() {
       client.subscribe("AMtime");
       client.subscribe("PMtime");
       client.subscribe("night_m");
+      client.subscribe("amTemperature");
+      client.subscribe("pmTemperature");
+      Serial.print("*****************pmTemperature***************= ");
+      Serial.print(pmTemperature);
       client.subscribe("heaterStatus");
 
     } else {
@@ -336,6 +346,11 @@ void relay_Control() {
   }
 
   if (Am == false) {
+    Serial.println("if (Am == false");
+    Serial.print("pmTemp = ");
+    Serial.println(pmTemp);
+    Serial.print("s3 = ");
+    Serial.println(s3);
     if (s3 < pmTemp) {
       digitalWrite(Relay_Pin, HIGH);
       digitalWrite(LED_Pin, LOW);  // builtin LED_Pin on
@@ -370,15 +385,23 @@ void publishTempToMQTT(void) {
   char sensVal[50];
   float myFloat1 = s1;
   sprintf(sensVal, "%f", myFloat1);
-  client.publish("outSide", sensVal);
+  client.publish("outSide", sensVal,true);
 
   float myFloat2 = s2;
   sprintf(sensVal, "%f", myFloat2);
-  client.publish("coolSide", sensVal);
+  client.publish("coolSide", sensVal,true);
 
   float myFloat3 = s3;
   sprintf(sensVal, "%f", myFloat3);
-  client.publish("heater", sensVal);
+  client.publish("heater", sensVal,true);
+
+  // float myFloat4 = amTemp;
+  // sprintf(sensVal, "%f", myFloat4);
+  // client.publish("amTemp", sensVal,true);
+
+  // float myFloat5 = pmTemp;
+  // sprintf(sensVal, "%f", myFloat5);
+  // client.publish("pmTemp", sensVal,true);
 }
 
 /********************************************
@@ -461,22 +484,23 @@ void sendSensor() {
   ************************************************************/
 
   celsius = (float)raw / 16.0;
-  //if (adr == 228) {  //inside board out side dial
+  if (adr == 181) {  //tortoise encloseure
   // if(adr == 89)  {        //outside board out side dial
-  if (adr == 49) {
+  //if (adr == 49) {
     // test rig board out side dial
     // change celsius to fahrenheit if you prefer output in Fahrenheit;
-    s1 = (celsius);  // BLUE outside
+    s1 = (celsius);  // Black outside
   }
-  //if (adr == 197) {  //inside boade Heater dial
-  // if(adr == 96)  {        //out side board  Heater dial
-  if (adr == 59) {   // out side board  Heater dial
+ 
+  // if(adr == 96)  {       
+  //if (adr == 59) {   
+   if (adr == 197) {  //tortoise encloseure
                      // change celsius to fahrenheit if you prefer output in Fahrenheit;
     s2 = (celsius);  //GREEN coolSide (adr == 59)
   }
   //if (adr == 92) {   //inside board inSide dial
   // if(adr == 116)  {    // outside board inSide dial
-  if (adr == 181) {  // Test rig board inSide dial
+  if (adr == 228) {  //tortoise encloseure
                      // change celsius to fahrenheit if you prefer output in Fahrenheit;
     s3 = (celsius);  //Heater RED heater
   }
@@ -493,6 +517,8 @@ void sendSensor() {
       // Serial.println("????????????????????????? 440");
       {
         pmTemp = pmTemperature;
+        Serial.print("pmTemp & pmTemperature = ");
+        Serial.println(pmTemp);
       }
     }
   }
