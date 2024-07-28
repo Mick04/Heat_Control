@@ -254,7 +254,7 @@ void setup_wifi() {
  * ******************************************/
 void callback(char *topic, byte *payload, unsigned int length) {
   // Print the result of strcmp(topic, "control") == 0
-  bool isControl = (strcmp(topic, "control") == 0);
+  // bool isControl = (strcmp(topic, "control") == 0);
   ;
   // Null-terminate the payload to treat it as a string
   payload[length] = '\0';
@@ -269,17 +269,25 @@ void callback(char *topic, byte *payload, unsigned int length) {
   }
   if (Reset == true) {
     if (strstr(topic, "amTemperature")) {
-      sscanf((char *)payload, "%d", &amTemperature);  // if topic = amTemperature then amTemperature = payload
+      sscanf((char *)payload, "%d", &amTemperature); 
+      Serial.print("££££££££££amTemperature££££££££ = ");
+      Serial.println(amTemperature);
+      //if topic = amTemperature then amTemperature = payload;
     }
     if (strstr(topic, "pmTemperature")) {
-      sscanf((char *)payload, "%d", &pmTemperature);  // if topic = pmTemperature then pmTemperature = payload
+      sscanf((char *)payload, "%d", &pmTemperature);
+      Serial.print("££££££££££ pmTemperature ££££££££ = ");
+      Serial.println(pmTemperature);  
+      //if topic = pmTemperature then pmTemperature = payload;
     }
     if (strstr(topic, "AMtime")) {
-      sscanf((char *)payload, "%d:%d", &amHours, &amMinutes);  // if topic = AMtime then AMtime = payload
+      sscanf((char *)payload, "%d:%d", &amHours, &amMinutes);  
+      //if topic = AMtime then AMtime = payload;
     }
 
     if (strstr(topic, "PMtime")) {
-      sscanf((char *)payload, "%d:%d", &pmHours, &pmMinutes);  // if topic = night_h then pmHours = payload Serial.print("AMtime = ");
+      sscanf((char *)payload, "%d:%d", &pmHours, &pmMinutes);
+      //if topic = night_h then pmHours = payload Serial.print("AMtime = ");
     }
   }
 }

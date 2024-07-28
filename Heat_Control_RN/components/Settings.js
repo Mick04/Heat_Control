@@ -73,10 +73,10 @@ export function SettingsScreen() {
     try {
       const value = await AsyncStorage.getItem(key);
       if (value !== null) {
-        setState(parseInt(value));
+        setState(value);
       }
     } catch (e) {
-      console.log(e);
+      console.log("Failed to retrieve data from storage:", e);
     }
   };
   /*******************************************
@@ -97,6 +97,22 @@ export function SettingsScreen() {
    *  Effect hook to retrieve data    *
    *               end                *
    ***********************************/
+
+  /*******************************************
+   *      Function to store data             *
+   *               start                     *
+   *******************************************/
+  const storeData = async (key, value) => {
+    try {
+      await AsyncStorage.setItem(key, value);
+    } catch (e) {
+      console.log("Failed to save the data to the storage:", e);
+    }
+  };
+  /*******************************************
+   *      Function to store data             *
+   *                 end                     *
+   *******************************************/
 
   /********************************************************************
    *   Effect hook to establish MQTT connection and handle messages   *
@@ -142,7 +158,14 @@ export function SettingsScreen() {
         case "PMtime":
           setPMTime(payload);
           break;
-        default:
+          case "control":
+            if (payload === 'N') {
+              setReset(true);
+            } else if (payload === 'F') {
+              setReset(false);
+            }
+            break;
+            default:
           console.log(`Unhandled topic: ${message.destinationName}`);
       }
     }
