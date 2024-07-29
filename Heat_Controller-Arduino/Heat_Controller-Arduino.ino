@@ -32,8 +32,8 @@ float s3;
 int adr;
 uint_fast8_t amTemperature;  // is set by the sliders
 uint_fast8_t pmTemperature;  // is set by the sliders
-uint_fast8_t amTemp;         // is set by the sliders
-uint_fast8_t pmTemp;         // is set by the sliders
+uint_fast8_t amTemp = 0;         // is set by the sliders
+uint_fast8_t pmTemp =0;         // is set by the sliders
 uint_fast8_t AMtime;
 uint_fast8_t PMtime;
 uint_fast8_t Day;
@@ -219,12 +219,22 @@ void loop() {
     Serial.println("201 checkHeaterTimeout()");
     checkHeaterTimeout();
   }
-  Serial.print("Hours = ");
-  Serial.println(Hours);
+  Serial.print("amHours = ");
+  Serial.println(amHours);
+  Serial.print("amMinutes = ");
+  Serial.println(amMinutes);
+   Serial.print("pmHours = ");
+  Serial.println(pmHours); 
+  Serial.print("pmMinutes = ");
+  Serial.println(pmMinutes);
   Serial.print("pmTemperature = ");
   Serial.println(pmTemperature);
   Serial.print("amTemperature = ");
   Serial.println(amTemperature);
+  Serial.print("amTemp = ");
+  Serial.println(amTemp);
+  Serial.print("pmTemp = ");
+  Serial.println(pmTemp);
 }
 /********************************************
   *       connect to the internet start.      *
@@ -270,12 +280,19 @@ void callback(char *topic, byte *payload, unsigned int length) {
   // if (Reset == true) {
   if (strstr(topic, "amTemperature")) {
     sscanf((char *)payload, "%d", &amTemperature);
+      if (StartUp == 1) {
+    amTemp = amTemperature;
+  }
     Serial.print("££££££££££amTemperature££££££££ = ");
     Serial.println(amTemperature);
     //if topic = amTemperature then amTemperature = payload;
   }
   if (strstr(topic, "pmTemperature")) {
     sscanf((char *)payload, "%d", &pmTemperature);
+      if (StartUp == 1) {
+    Serial.println("____________StartUp_________ = if (StartUp ==1)");
+    pmTemp = pmTemperature;
+  }
     Serial.print("££££££££££ pmTemperature ££££££££ = ");
     Serial.println(pmTemperature);
     //if topic = pmTemperature then pmTemperature = payload;
@@ -288,12 +305,6 @@ void callback(char *topic, byte *payload, unsigned int length) {
   if (strstr(topic, "PMtime")) {
     sscanf((char *)payload, "%d:%d", &pmHours, &pmMinutes);
     //if topic = night_h then pmHours = payload Serial.print("AMtime = ");
-  }
-  
-  if (StartUp ==1) {
-    amTemp = amTemperature;
-    pmTemp = pmTemperature;
-    StartUp = 0;
   }
 Serial.print("____________StartUp_________ = ");
   Serial.println(StartUp);
@@ -313,6 +324,11 @@ Serial.print("____________StartUp_________ = ");
   Serial.print(pmMinutes);
   Serial.print("@£@£@£@£@£@£ PMtime = ");
   Serial.println(PMtime);
+  if(amTemp != 0 && pmTemp != 0){
+    StartUp = 0;
+    Serial.print("@@@@@@@@@@@@@@@@@@@@@@StartUp********************* = ");
+    Serial.println(StartUp);
+  }
 }
 /********************************************
                 Callback end
@@ -340,14 +356,14 @@ void reconnect() {
       Serial.print("*****************pmTemperature***************= ");
       Serial.print(pmTemperature);
       client.subscribe("heaterStatus");
-      if (StartUp) {
-        // Publish initial values
-        // client.publish("amTemperature", String(amTemperature).c_str());
-        // client.publish("pmTemperature", String(pmTemperature).c_str());
-        // client.publish("AMtime", String(AMtime).c_str());
-        // client.publish("PMtime", String(PMtime).c_str());
-        // StartUp = false;
-      }
+      // if (StartUp) {
+      //   // Publish initial values
+      //   // client.publish("amTemperature", String(amTemperature).c_str());
+      //   // client.publish("pmTemperature", String(pmTemperature).c_str());
+      //   // client.publish("AMtime", String(AMtime).c_str());
+      //   // client.publish("PMtime", String(PMtime).c_str());
+      //   // StartUp = false;
+      // }
 
     } else {
       Serial.print("failed, reconnect = ");
