@@ -10,7 +10,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import DatePickerModal from "./DatePickerModal"; // Adjust the path as necessary
 import TemperaturePicker from "./TemperaturePicker";
@@ -65,54 +65,55 @@ export function SettingsScreen() {
     }
   };
 
-  /*******************************************
-   *      Function to retrieve data          *
-   *               start                     *
-   *******************************************/
-  const retrieveData = async (key, setState) => {
-    try {
-      const value = await AsyncStorage.getItem(key);
-      if (value !== null) {
-        setState(value);
-      }
-    } catch (e) {
-      console.log("Failed to retrieve data from storage:", e);
-    }
-  };
-  /*******************************************
-   *     Function to retrieve data           *
-   *                 end                     *
-   *******************************************/
-  /************************************
-   *  Effect hook to retrieve data    *
-   *             start                *
-   ***********************************/
-  useEffect(() => {
-    retrieveData("amTemperature", setAmTemperature);
-    retrieveData("pmTemperature", setPmTemperature);
-    retrieveData("AMtime", setAMTime);
-    retrieveData("PMtime", setPMTime);
-  }, []);
-  /************************************
-   *  Effect hook to retrieve data    *
-   *               end                *
-   ***********************************/
+  // /*******************************************
+  //  *      Function to retrieve data          *
+  //  *               start                     *
+  //  *******************************************/
+  // const retrieveData = async (key, setState) => {
+  //   try {
+  //     const value = await AsyncStorage.getItem(key);
+  //     if (value !== null) {
+  //       setState(value);
+  //     }
+  //   } catch (e) {
+  //     console.log("Failed to retrieve data from storage:", e);
+  //   }
+  // };
+  // /*******************************************
+  //  *     Function to retrieve data           *
+  //  *                 end                     *
+  //  *******************************************/
+  // /************************************
+  //  *  Effect hook to retrieve data    *
+  //  *             start                *
+  //  ***********************************/
+  // useEffect(() => {
+  //   retrieveData("amTemperature", setAmTemperature);
+  //   retrieveData("pmTemperature", setPmTemperature);
+  //   retrieveData("AMtime", setAMTime);
+  //   retrieveData("PMtime", setPMTime);
+  // }, []);
+  // /************************************
+  //  *  Effect hook to retrieve data    *
+  //  *               end                *
+  //  ***********************************/
 
-  /*******************************************
-   *      Function to store data             *
-   *               start                     *
-   *******************************************/
-  const storeData = async (key, value) => {
-    try {
-      await AsyncStorage.setItem(key, value);
-    } catch (e) {
-      console.log("Failed to save the data to the storage:", e);
-    }
-  };
-  /*******************************************
-   *      Function to store data             *
-   *                 end                     *
-   *******************************************/
+  // /*******************************************
+  //  *      Function to store data             *
+  //  *               start                     *
+  //  *******************************************/
+  // const storeData = async (key, value) => {
+  //   try {
+  //     await AsyncStorage.setItem(key, value);
+  //   } catch (e) {
+  //     console.log("Failed to save the data to the storage:", e);
+  //   }
+  // };
+  // /*******************************************
+  //  *      Function to store data             *
+  //  *                 end                     *
+  //  *******************************************/
+  
 
   /********************************************************************
    *   Effect hook to establish MQTT connection and handle messages   *
@@ -120,7 +121,16 @@ export function SettingsScreen() {
    * ******************************************************************/
 
   useEffect(() => {
-    // Function to handle successful connection
+    const clearRetainedMessages = () => {
+      const clearMessage = new Paho.Message("");
+      clearMessage.retained = true;
+  
+      ["control"].forEach((topic) => {
+        clearMessage.destinationName = topic;
+        client.send(clearMessage);
+      });
+    };
+  
     function onConnect() {
       console.log("Connected!");
       setIsConnected(true);
@@ -129,22 +139,17 @@ export function SettingsScreen() {
       client.subscribe("pmTemperature");
       client.subscribe("AMtime");
       client.subscribe("PMtime");
+      clearRetainedMessages(); // Clear retained messages
     }
-
-    // Function to handle connection failure
+  
     function onFailure() {
       console.log("Failed to connect!");
       setIsConnected(false);
     }
-
-    /***********************************************
-     *    Function to handle incoming messages     *
-     *                   start                     *
-     * *********************************************/
-    // Function to handle incoming messages
+  
     function onMessageReceived(message) {
       const payload = message.payloadString;
-      console.log(`message Received on topic ${message.destinationName} - ${payload}`);
+      console.log(`Message received on topic ${message.destinationName} - ${payload}`);
       switch (message.destinationName) {
         case "amTemperature":
           setAmTemperature(payload);
@@ -158,64 +163,26 @@ export function SettingsScreen() {
         case "PMtime":
           setPMTime(payload);
           break;
-          case "control":
-            if (payload === 'N') {
-              setReset(true);
-            } else if (payload === 'F') {
-              setReset(false);
-            }
-            break;
-            default:
+        case "control":
+          if (payload === 'N') {
+            setReset(true);
+          } else if (payload === 'F') {
+            setReset(false);
+          }
+          break;
+        default:
           console.log(`Unhandled topic: ${message.destinationName}`);
       }
     }
-    // function onMessageReceived(message) {
-    //   if (message.destinationName === "amTemperature") {
-    //     setAmTemperature(message.payloadString);
-    //   } else if (message.destinationName === "pmTemperature") {
-    //     setPmTemperature(message.payloadString);
-    //   } else if (message.destinationName === "AMtime") {
-    //     setAMTime(message.payloadString);
-    //   } else if (message.destinationName === "PMtime") {
-    //     setPMTime(message.payloadString);
-    //   }
-    // }
-    /***********************************************
-     *    Function to handle incoming messages     *
-     *                     end                     *
-     * *********************************************/
-
-    /***********************************************
-     *          Connect to the MQTT broker         *
-     *                   start                     *
-     * *********************************************/
-
-    /***********************************************r
-     *          Connect to the MQTT broker         *
-     *                     end                     *
-     * *********************************************/
-
-    /***********************************************
-     *           Set the message handler           *
-     *                  start                      *
-     * *********************************************/
-
+  
     client.onMessageArrived = onMessageReceived;
     client.connect({ onSuccess: onConnect, onFailure });
-
-    /***********************************************
-     *           Set the message handler            *
-     *                      end                     *
-     * *********************************************/
-    /*************************************************************
-     *   Cleanup function to disconnect when component unmounts  *
-     *                         start                             *
-     * ***********************************************************/
-
+  
     return () => {
       client.disconnect();
     };
   }, []);
+  
   /*************************************************************
    *   Cleanup function to disconnect when component unmounts  *
    *                            end                            *
@@ -273,37 +240,37 @@ export function SettingsScreen() {
     try {
       const messageN = new Paho.Message("N");
       messageN.destinationName = "control";
-      messageN.retained = true; // Set the retain flag
+      messageN.retained = false; // Set the retain flag
       client.send(messageN);
 
       const messageAM = new Paho.Message(amTemperature.toString());
       messageAM.destinationName = "amTemperature";
-      messageAM.retained = true; // Set the retain flag
-      storeData("amTemperature", messageAM.payloadString); // Store updated value
+      messageAM.retained = false; // Set the retain flag
+      // storeData("amTemperature", messageAM.payloadString); // Store updated value
       client.send(messageAM);
 
       const messagePM = new Paho.Message(pmTemperature.toString());
       messagePM.destinationName = "pmTemperature";
       messagePM.retained = true; // Set the retain flag
-      storeData("pmTemperature", messagePM.payloadString); // Store updated value
+      // storeData("pmTemperature", messagePM.payloadString); // Store updated value
       client.send(messagePM);
 
       const messageAMTime = new Paho.Message(AMtime.toString());
       messageAMTime.destinationName = "AMtime";
       messageAMTime.retained = true; // Set the retain flag
-      storeData("AMtime", messageAMTime.payloadString); // Store updated value
+      // storeData("AMtime", messageAMTime.payloadString); // Store updated value
       client.send(messageAMTime);
 
       const messagePMTime = new Paho.Message(PMtime.toString());
       messagePMTime.destinationName = "PMtime";
       messagePMTime.retained = true; // Set the retain flag
-      storeData("PMtime", messagePMTime.payloadString);
+      // storeData("PMtime", messagePMTime.payloadString);
       client.send(messagePMTime);
 
       setTimeout(() => {
         const messageF = new Paho.Message("F");
         messageF.destinationName = "control";
-        messageF.retained = true; // Set the retain flag
+        messageF.retained = false; // Set the retain flag
         client.send(messageF);
       }, 10000);
     } catch (err) {

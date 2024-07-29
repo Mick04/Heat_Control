@@ -14,7 +14,7 @@
 #include <ESP_Mail_Client.h>
 
 // Define pins and other constants
-#define Relay_Pin D5 // active board
+#define Relay_Pin D5  // active board
 #define LED_Pin 13    // on board LED_Pin
 // #define LED_Pin D6//LED_Pin  //change when debuged
 OneWire ds(D7);  // active board  // on pin 10 (a 4.7K resistor is necessary)
@@ -267,29 +267,52 @@ void callback(char *topic, byte *payload, unsigned int length) {
       Reset = false;
     }
   }
-  if (Reset == true) {
-    if (strstr(topic, "amTemperature")) {
-      sscanf((char *)payload, "%d", &amTemperature); 
-      Serial.print("££££££££££amTemperature££££££££ = ");
-      Serial.println(amTemperature);
-      //if topic = amTemperature then amTemperature = payload;
-    }
-    if (strstr(topic, "pmTemperature")) {
-      sscanf((char *)payload, "%d", &pmTemperature);
-      Serial.print("££££££££££ pmTemperature ££££££££ = ");
-      Serial.println(pmTemperature);  
-      //if topic = pmTemperature then pmTemperature = payload;
-    }
-    if (strstr(topic, "AMtime")) {
-      sscanf((char *)payload, "%d:%d", &amHours, &amMinutes);  
-      //if topic = AMtime then AMtime = payload;
-    }
-
-    if (strstr(topic, "PMtime")) {
-      sscanf((char *)payload, "%d:%d", &pmHours, &pmMinutes);
-      //if topic = night_h then pmHours = payload Serial.print("AMtime = ");
-    }
+  // if (Reset == true) {
+  if (strstr(topic, "amTemperature")) {
+    sscanf((char *)payload, "%d", &amTemperature);
+    Serial.print("££££££££££amTemperature££££££££ = ");
+    Serial.println(amTemperature);
+    //if topic = amTemperature then amTemperature = payload;
   }
+  if (strstr(topic, "pmTemperature")) {
+    sscanf((char *)payload, "%d", &pmTemperature);
+    Serial.print("££££££££££ pmTemperature ££££££££ = ");
+    Serial.println(pmTemperature);
+    //if topic = pmTemperature then pmTemperature = payload;
+  }
+  if (strstr(topic, "AMtime")) {
+    sscanf((char *)payload, "%d:%d", &amHours, &amMinutes);
+    //if topic = AMtime then AMtime = payload;
+  }
+
+  if (strstr(topic, "PMtime")) {
+    sscanf((char *)payload, "%d:%d", &pmHours, &pmMinutes);
+    //if topic = night_h then pmHours = payload Serial.print("AMtime = ");
+  }
+  
+  if (StartUp ==1) {
+    amTemp = amTemperature;
+    pmTemp = pmTemperature;
+    StartUp = 0;
+  }
+Serial.print("____________StartUp_________ = ");
+  Serial.println(StartUp);
+
+  Serial.print("amTemperature; = ");
+  Serial.println(amTemperature);
+
+  Serial.print("pmTemperature = ");
+  Serial.println(pmTemperature);
+  Serial.print("amTemp = ");
+  Serial.println(amTemp);
+  Serial.print("___________pmTemp____________ = ");
+  Serial.println(pmTemp);
+  Serial.print("@@£@£@£@£@£@£ pmHours = ");
+  Serial.print(pmHours);
+  Serial.print(" pmMinutes = ");
+  Serial.print(pmMinutes);
+  Serial.print("@£@£@£@£@£@£ PMtime = ");
+  Serial.println(PMtime);
 }
 /********************************************
                 Callback end
@@ -304,23 +327,27 @@ void reconnect() {
     String clientId = "ESP8266Client";
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
-    if (client.connect(clientId.c_str())) {
+    if (client.connect("ESP8266Client")) {
       Serial.println("connected");
-      // Once connected, publish an announcement...
-      client.publish("Temp_Control/pub", "hello world*****");
-      // ... and resubscribe
+      // // Once connected,
+      // ... subscribe to topics
       client.subscribe("Temp_Control/sub");
       client.subscribe("control");
       client.subscribe("amTemperature");
       client.subscribe("pmTemperature");
       client.subscribe("AMtime");
       client.subscribe("PMtime");
-      client.subscribe("night_m");
-      client.subscribe("amTemperature");
-      client.subscribe("pmTemperature");
       Serial.print("*****************pmTemperature***************= ");
       Serial.print(pmTemperature);
       client.subscribe("heaterStatus");
+      if (StartUp) {
+        // Publish initial values
+        // client.publish("amTemperature", String(amTemperature).c_str());
+        // client.publish("pmTemperature", String(pmTemperature).c_str());
+        // client.publish("AMtime", String(AMtime).c_str());
+        // client.publish("PMtime", String(PMtime).c_str());
+        // StartUp = false;
+      }
 
     } else {
       Serial.print("failed, reconnect = ");
@@ -331,6 +358,13 @@ void reconnect() {
     }
   }
 }
+
+// void publishTempToMQTT() {
+//   // Prepare temperature data
+//   String tempData = String("Current Temperature: ") + String(amTemperature);
+//   // Publish temperature data to the MQTT topic
+//   client.publish("sensor/temperature", tempData.c_str());
+// }
 
 /*************************************************************
                             Relay Control
@@ -393,15 +427,15 @@ void publishTempToMQTT(void) {
   char sensVal[50];
   float myFloat1 = s1;
   sprintf(sensVal, "%f", myFloat1);
-  client.publish("outSide", sensVal,true);
+  client.publish("outSide", sensVal, true);
 
   float myFloat2 = s2;
   sprintf(sensVal, "%f", myFloat2);
-  client.publish("coolSide", sensVal,true);
+  client.publish("coolSide", sensVal, true);
 
   float myFloat3 = s3;
   sprintf(sensVal, "%f", myFloat3);
-  client.publish("heater", sensVal,true);
+  client.publish("heater", sensVal, true);
 
   // float myFloat4 = amTemp;
   // sprintf(sensVal, "%f", myFloat4);
@@ -493,16 +527,16 @@ void sendSensor() {
 
   celsius = (float)raw / 16.0;
   if (adr == 181) {  //tortoise encloseure
-  // if(adr == 89)  {        //outside board out side dial
-  //if (adr == 49) {
+                     // if(adr == 89)  {        //outside board out side dial
+                     //if (adr == 49) {
     // test rig board out side dial
     // change celsius to fahrenheit if you prefer output in Fahrenheit;
     s1 = (celsius);  // Black outside
   }
- 
-  // if(adr == 96)  {       
-  //if (adr == 59) {   
-   if (adr == 197) {  //tortoise encloseure
+
+  // if(adr == 96)  {
+  //if (adr == 59) {
+  if (adr == 197) {  //tortoise encloseure
                      // change celsius to fahrenheit if you prefer output in Fahrenheit;
     s2 = (celsius);  //GREEN coolSide (adr == 59)
   }
@@ -577,7 +611,7 @@ void checkHeaterTimeout() {
                 Check Heater Timeout end
  ******************************************/
 
- /********************************************
+/********************************************
                 Email send start
  ******************************************/
 
@@ -588,9 +622,9 @@ void gmail_send(String subject, String message) {
   smtp.debug(1);
 
   smtp.callback(smtpCallback);
- 
+
   // set the session config
-   Session_Config config;
+  Session_Config config;
   config.server.host_name = SMTP_HOST;
   config.server.port = SMTP_PORT;
   config.login.email = SENDER_EMAIL;
