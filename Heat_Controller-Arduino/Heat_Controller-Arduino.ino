@@ -78,9 +78,7 @@ const char *mqtt_server = "public.mqtthq.com";
 // the sender email credentials
 #define SENDER_EMAIL "esp8266heaterapp@gmail.com";
 #define SENDER_PASSWORD "xhjh djyf roxm sxzh";
-
 #define RECIPIENT_EMAIL "mac5y4@talktalk.net"
-
 #define SMTP_HOST "smtp.gmail.com";
 #define SMTP_PORT 587;
 
