@@ -113,13 +113,15 @@ export function SettingsScreen() {
         case "PMtime":
           setPMTime(payload);
           break;
-        case "control":
-          if (payload === 'N') {
-            setReset(true);
-          } else if (payload === 'F') {
-            setReset(false);
-          }
-          break;
+        // case "control":
+        //   if (payload === 'N') {
+        //     console.log('Resetting to true');
+        //     setReset(true);
+        //   } else if (payload === 'F') {
+        //     console.log('Resetting to false');
+        //     setReset(false);
+        //   }
+        //   break;
         default:
           console.log(`Unhandled topic: ${message.destinationName}`);
       }
@@ -188,10 +190,10 @@ export function SettingsScreen() {
   };
   const sendMessages = () => {
     try {
-      const messageN = new Paho.Message("N");
-      messageN.destinationName = "control";
-      messageN.retained = false; // Set the retain flag
-      client.send(messageN);
+      // const messageN = new Paho.Message("N");
+      // messageN.destinationName = "control";
+      // messageN.retained = false; // Set the retain flag
+      // client.send(messageN);
 
       const messageAM = new Paho.Message(amTemperature ? amTemperature.toString() : "0");
       messageAM.destinationName = "amTemperature";
@@ -217,12 +219,12 @@ export function SettingsScreen() {
       // storeData("PMtime", messagePMTime.payloadString);
       client.send(messagePMTime);
 
-      setTimeout(() => {
-        const messageF = new Paho.Message("F");
-        messageF.destinationName = "control";
-        messageF.retained = false; // Set the retain flag
-        client.send(messageF);
-      }, 10000);
+      // setTimeout(() => {
+      //   const messageF = new Paho.Message("F");
+      //   messageF.destinationName = "control";
+      //   messageF.retained = false; // Set the retain flag
+      //   client.send(messageF);
+      // }, 10000);
     } catch (err) {
       console.log("Failed to send messages:", err);
     }
@@ -329,19 +331,18 @@ export function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
   },
   dataText: {
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     color: "red",
     margin: 20,
     fontSize: 20,
   },
   dataReset: {
     fontSize: 20,
-    backgroundColor: "#fff",
+    // backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
     margin: 10,

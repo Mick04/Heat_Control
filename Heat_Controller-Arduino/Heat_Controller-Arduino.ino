@@ -45,7 +45,7 @@ uint_fast8_t amMinutes;
 uint_fast8_t pmHours;
 uint_fast8_t pmMinutes;
 bool Am;
-bool Reset = false;  // set when slider is moved
+// bool Reset = false;  // set when slider is moved
 bool StartUp = 1;
 
 /********************************************
@@ -195,10 +195,11 @@ void loop() {
     Serial.println("MQTT client not connected. Attempting to reconnect...");
     reconnect();
   }
+  
+  client.loop();
   sendSensor();
   publishTempToMQTT();
   relay_Control();  // call relay_Control function
-  client.loop();
   timeClient.update();
   Day = timeClient.getDay();
   Hours = timeClient.getHours();
@@ -240,15 +241,6 @@ void callback(char *topic, byte *payload, unsigned int length) {
   // Null-terminate the payload to treat it as a string
   payload[length] = '\0';
 
-  // Handle control signals
-  if (strcmp(topic, "control") == 0) {
-    if ((char)payload[0] == 'N') {
-      Reset = true;
-    } else if ((char)payload[0] == 'F') {
-      Reset = false;
-    }
-  }
-  // if (Reset == true) {
   if (strstr(topic, "amTemperature")) {
     sscanf((char *)payload, "%d", &amTemperature);
       if (StartUp == 1) {
@@ -286,7 +278,8 @@ void reconnect() {
     String clientId = "ESP8266Client";
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
-    if (client.connect("ESP8266Client")) {
+    if (client.connect(clientId.c_str())) {
+    // if (client.connect("ESP8266Client")) {
       Serial.println("connected");
       // // Once connected,
       // ... subscribe to topics
