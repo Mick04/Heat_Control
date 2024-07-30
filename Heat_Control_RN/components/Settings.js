@@ -65,56 +65,6 @@ export function SettingsScreen() {
     }
   };
 
-  // /*******************************************
-  //  *      Function to retrieve data          *
-  //  *               start                     *
-  //  *******************************************/
-  // const retrieveData = async (key, setState) => {
-  //   try {
-  //     const value = await AsyncStorage.getItem(key);
-  //     if (value !== null) {
-  //       setState(value);
-  //     }
-  //   } catch (e) {
-  //     console.log("Failed to retrieve data from storage:", e);
-  //   }
-  // };
-  // /*******************************************
-  //  *     Function to retrieve data           *
-  //  *                 end                     *
-  //  *******************************************/
-  // /************************************
-  //  *  Effect hook to retrieve data    *
-  //  *             start                *
-  //  ***********************************/
-  // useEffect(() => {
-  //   retrieveData("amTemperature", setAmTemperature);
-  //   retrieveData("pmTemperature", setPmTemperature);
-  //   retrieveData("AMtime", setAMTime);
-  //   retrieveData("PMtime", setPMTime);
-  // }, []);
-  // /************************************
-  //  *  Effect hook to retrieve data    *
-  //  *               end                *
-  //  ***********************************/
-
-  // /*******************************************
-  //  *      Function to store data             *
-  //  *               start                     *
-  //  *******************************************/
-  // const storeData = async (key, value) => {
-  //   try {
-  //     await AsyncStorage.setItem(key, value);
-  //   } catch (e) {
-  //     console.log("Failed to save the data to the storage:", e);
-  //   }
-  // };
-  // /*******************************************
-  //  *      Function to store data             *
-  //  *                 end                     *
-  //  *******************************************/
-  
-
   /********************************************************************
    *   Effect hook to establish MQTT connection and handle messages   *
    *                          start                                   *
@@ -243,25 +193,25 @@ export function SettingsScreen() {
       messageN.retained = false; // Set the retain flag
       client.send(messageN);
 
-      const messageAM = new Paho.Message(amTemperature.toString());
+      const messageAM = new Paho.Message(amTemperature ? amTemperature.toString() : "0");
       messageAM.destinationName = "amTemperature";
       messageAM.retained = false; // Set the retain flag
       // storeData("amTemperature", messageAM.payloadString); // Store updated value
       client.send(messageAM);
 
-      const messagePM = new Paho.Message(pmTemperature.toString());
+      const messagePM = new Paho.Message(pmTemperature ? pmTemperature.toString(): "0");
       messagePM.destinationName = "pmTemperature";
       messagePM.retained = true; // Set the retain flag
       // storeData("pmTemperature", messagePM.payloadString); // Store updated value
       client.send(messagePM);
 
-      const messageAMTime = new Paho.Message(AMtime.toString());
+      const messageAMTime = new Paho.Message(AMtime ? AMtime.toString(): "00:00");
       messageAMTime.destinationName = "AMtime";
       messageAMTime.retained = true; // Set the retain flag
       // storeData("AMtime", messageAMTime.payloadString); // Store updated value
       client.send(messageAMTime);
 
-      const messagePMTime = new Paho.Message(PMtime.toString());
+      const messagePMTime = new Paho.Message(PMtime ? PMtime.toString(): "00:00");
       messagePMTime.destinationName = "PMtime";
       messagePMTime.retained = true; // Set the retain flag
       // storeData("PMtime", messagePMTime.payloadString);
