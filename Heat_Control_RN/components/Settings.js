@@ -10,7 +10,6 @@ import {
   SafeAreaView,
   TouchableOpacity,
 } from "react-native";
-// import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import DatePickerModal from "./DatePickerModal"; // Adjust the path as necessary
 import TemperaturePicker from "./TemperaturePicker";
@@ -113,15 +112,6 @@ export function SettingsScreen() {
         case "PMtime":
           setPMTime(payload);
           break;
-        // case "control":
-        //   if (payload === 'N') {
-        //     console.log('Resetting to true');
-        //     setReset(true);
-        //   } else if (payload === 'F') {
-        //     console.log('Resetting to false');
-        //     setReset(false);
-        //   }
-        //   break;
         default:
           console.log(`Unhandled topic: ${message.destinationName}`);
       }
@@ -190,41 +180,26 @@ export function SettingsScreen() {
   };
   const sendMessages = () => {
     try {
-      // const messageN = new Paho.Message("N");
-      // messageN.destinationName = "control";
-      // messageN.retained = false; // Set the retain flag
-      // client.send(messageN);
-
       const messageAM = new Paho.Message(amTemperature ? amTemperature.toString() : "0");
       messageAM.destinationName = "amTemperature";
       messageAM.retained = false; // Set the retain flag
-      // storeData("amTemperature", messageAM.payloadString); // Store updated value
       client.send(messageAM);
 
       const messagePM = new Paho.Message(pmTemperature ? pmTemperature.toString(): "0");
       messagePM.destinationName = "pmTemperature";
       messagePM.retained = true; // Set the retain flag
-      // storeData("pmTemperature", messagePM.payloadString); // Store updated value
       client.send(messagePM);
 
       const messageAMTime = new Paho.Message(AMtime ? AMtime.toString(): "00:00");
       messageAMTime.destinationName = "AMtime";
       messageAMTime.retained = true; // Set the retain flag
-      // storeData("AMtime", messageAMTime.payloadString); // Store updated value
       client.send(messageAMTime);
 
       const messagePMTime = new Paho.Message(PMtime ? PMtime.toString(): "00:00");
       messagePMTime.destinationName = "PMtime";
       messagePMTime.retained = true; // Set the retain flag
-      // storeData("PMtime", messagePMTime.payloadString);
       client.send(messagePMTime);
 
-      // setTimeout(() => {
-      //   const messageF = new Paho.Message("F");
-      //   messageF.destinationName = "control";
-      //   messageF.retained = false; // Set the retain flag
-      //   client.send(messageF);
-      // }, 10000);
     } catch (err) {
       console.log("Failed to send messages:", err);
     }
@@ -236,7 +211,7 @@ export function SettingsScreen() {
         {/* Button to toggle the reset state */}
 
         <TouchableOpacity style={styles.reset} onPress={handleOnPress}>
-          <Text style={styles.dataReset}>
+          <Text style={styles.header}>
             {Reset ? "Press To Reset The Time" : "PRESS WHEN FINISHED"}
           </Text>
         </TouchableOpacity>
@@ -248,13 +223,13 @@ export function SettingsScreen() {
           <View style={styles.pickerContainer}>
             {/* TemperaturePicker components for AM temperatures */}
             <TemperaturePicker
-              label="AM"
+              label="Am Target "
               temperature={amTemperature}
               onValueChange={setAmTemperature}
             />
           </View>
           <TemperaturePicker
-            label="PM"
+            label="Pm Target "
             temperature={pmTemperature}
             onValueChange={setPmTemperature}
             // onValueChange={(value) => setPmTemperature(value)}
@@ -289,12 +264,12 @@ export function SettingsScreen() {
       {Reset && ( // Add this line to conditionally render the TimePicker components START
         <>
           <Text style={styles.temperatureText}>
-            {`AM Temperature:     ${
+            {`Am Target Temperature:     ${
               amTemperature !== null ? `${amTemperature}°C` : "Not selected"
             }`}
           </Text>
           <Text style={styles.temperatureText}>
-            {`PM Temperature:    ${
+            {`Pm Target Temperature:    ${
               pmTemperature !== null ? `${pmTemperature}°C` : "Not selected"
             }`}
           </Text>
@@ -316,7 +291,7 @@ export function SettingsScreen() {
         <StatusBar style="auto" />
       </View>
       <View style={styles.connectionStatus}>
-        <Text style={{ color: isConnected ? "green" : "red" }}>
+        <Text style={[styles.connectionStatus,{ color: isConnected ? "green" : "red" }]}>
           {isConnected
             ? "Connected to MQTT Broker"
             : "Disconnected from MQTT Broker"}
@@ -332,12 +307,23 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "center",
+    marginTop: 50,
+    marginBottom: 150,
+    // justifyContent: "center",
   },
+  header: {
+    fontSize: 20,
+    color: "red",
+    // padding: 10,
+    fontStyle: "italic",
+    fontFamily: "sans-serif",
+    textDecorationLine: 'underline',
+  },
+
   dataText: {
     // backgroundColor: "#fff",
-    color: "red",
-    margin: 20,
+    color: "blue",
+    margintop: 20,
     fontSize: 20,
   },
   dataReset: {
@@ -346,10 +332,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     margin: 10,
+    color: "green",
+    
   },
   reset: {
-    justifyContent: "center",
+    // justifyContent: "center",
     alignItems: "center",
+    // padding: 30,
+    color: "blue",
     // Add any additional styling you need for the TouchableOpacity here
   },
   pickerContainer: {
@@ -362,9 +352,11 @@ const styles = StyleSheet.create({
   temperatureText: {
     padding: 10,
     fontSize: 20,
+    color: "blue",
   },
   connectionStatus: {
-    marginTop: 20,
+    marginTop: 10,
+    fontSize: 20,
   },
   reconnectButton: {
     marginTop: 20,

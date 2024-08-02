@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     borderWidth: 5,
     borderColor: "red", // Fixed typo from 'boderColor' to 'borderColor'
     width: "90%",
-    padding: 35,
+    padding: 25,
     alignItems: "center",
     shadowColor: "#000",
     shadowOffset: {

@@ -71,7 +71,7 @@ export function GaugeScreen({ navigation }) {
       client.subscribe("coolSide");
       client.subscribe("heater");
       client.subscribe("amTemperature");
-      client.subscribe("pmTemperature",);
+      client.subscribe("pmTemperature");
     }
 
     function onFailure() {
@@ -188,21 +188,27 @@ export function GaugeScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.tempText}>
-        {"amTemperature = " + amTemperature}{" "}
-      </Text>
-      <Text style={styles.tempText}>
-        {"pmTemperature = " + pmTemperature}{" "}
-      </Text>
       <Text style={styles.heading}>Gauges</Text>
+      <Text style={styles.TargetTempText}>
+        {"Am Traget Temperature = " + amTemperature}{" "}
+      </Text>
+      <Text style={styles.TargetTempText}>
+        {"Pm Target Temperature = " + pmTemperature}{" "}
+      </Text>
       <View style={styles.tempContainer}>
-        <Text style={styles.tempText}>{"outSide = " + outSide + "\n"}</Text>
-        <Text style={styles.tempText}>{"coolSide = " + coolSide + "\n"}</Text>
-        <Text style={styles.tempText}>{"heater = " + heater}</Text>
+        <Text style={styles.tempText}>
+          {"outSide Temperature = " + outSide + "\n"}
+        </Text>
+        <Text style={styles.tempText}>
+          {"coolSide Temperature = " + coolSide + "\n"}
+        </Text>
+        <Text style={styles.tempText}>{"heater Temperature = " + heater}</Text>
       </View>
       <View style={styles.connectionStatus}>
-        <Text style={{ color: isConnected ? "green" : "red" }}>
-          {isConnected ? "Connected to MQTT Broker" : "Disconnected from MQTT Broker"}
+        <Text style={[styles.connectionStatus, { color: isConnected ? "green" : "red" }]}>
+          {isConnected
+            ? "Connected to MQTT Broker"
+            : "Disconnected from MQTT Broker"}
         </Text>
       </View>
       <TouchableOpacity style={styles.reconnectButton} onPress={reconnect}>
@@ -216,20 +222,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "center",
+    marginTop: 50,
+    paddingTop: 50,
   },
-  tempText: {
+  TargetTempText: {
     fontSize: 24,
-    color: "green",
+    color: "blue",
     padding: 10,
   },
   heading: {
     fontSize: 24,
     color: "red",
-    padding: 10,
+    padding: 30,
   },
   tempContainer: {
-    marginTop: 20,
+    marginTop: 30,
+    marginBottom: 40,
+  },
+  tempText: {
+   fontWeight: "bold",
+    color: "#008060",
+    fontSize: 20,
   },
   reconnectButton: {
     backgroundColor: "blue",
@@ -240,6 +253,10 @@ const styles = StyleSheet.create({
   reconnectText: {
     color: "white",
     fontSize: 20,
+  },
+  connectionStatus: {
+    fontSize: 20, 
+    margin: 20,
   },
 });
 export default GaugeScreen;

@@ -32,8 +32,8 @@ float s3;
 int adr;
 uint_fast8_t amTemperature;  // is set by the sliders
 uint_fast8_t pmTemperature;  // is set by the sliders
-uint_fast8_t amTemp = 0;         // is set by the sliders
-uint_fast8_t pmTemp =0;         // is set by the sliders
+uint_fast8_t amTemp = 0;     // is set by the sliders
+uint_fast8_t pmTemp = 0;     // is set by the sliders
 uint_fast8_t AMtime;
 uint_fast8_t PMtime;
 uint_fast8_t Day;
@@ -154,7 +154,7 @@ void setup() {
   ************************************/
 
   // ArduinoOTA.setHostname("INSIDE");
-  ArduinoOTA.setHostname("TEMPLATE");
+  ArduinoOTA.setHostname("TORTOISE_HOSING");
   // ArduinoOTA.setHostname("TEST RIG");
   ArduinoOTA.onStart([]() {
     String type;
@@ -195,7 +195,7 @@ void loop() {
     Serial.println("MQTT client not connected. Attempting to reconnect...");
     reconnect();
   }
-  
+
   client.loop();
   sendSensor();
   publishTempToMQTT();
@@ -243,16 +243,15 @@ void callback(char *topic, byte *payload, unsigned int length) {
 
   if (strstr(topic, "amTemperature")) {
     sscanf((char *)payload, "%d", &amTemperature);
-      if (StartUp == 1) {
-    amTemp = amTemperature;
-  }
- 
+    if (StartUp == 1) {
+      amTemp = amTemperature;
+    }
   }
   if (strstr(topic, "pmTemperature")) {
     sscanf((char *)payload, "%d", &pmTemperature);
-      if (StartUp == 1) {
-    pmTemp = pmTemperature;
-  }
+    if (StartUp == 1) {
+      pmTemp = pmTemperature;
+    }
   }
   if (strstr(topic, "AMtime")) {
     sscanf((char *)payload, "%d:%d", &amHours, &amMinutes);
@@ -261,7 +260,7 @@ void callback(char *topic, byte *payload, unsigned int length) {
   if (strstr(topic, "PMtime")) {
     sscanf((char *)payload, "%d:%d", &pmHours, &pmMinutes);
   }
-  if(amTemp != 0 && pmTemp != 0){
+  if (amTemp != 0 && pmTemp != 0) {
     StartUp = 0;
   }
 }
@@ -279,7 +278,7 @@ void reconnect() {
     clientId += String(random(0xffff), HEX);
     // Attempt to connect
     if (client.connect(clientId.c_str())) {
-    // if (client.connect("ESP8266Client")) {
+      // if (client.connect("ESP8266Client")) {
       Serial.println("connected");
       // // Once connected,
       // ... subscribe to topics
@@ -469,17 +468,13 @@ void sendSensor() {
   if (Am == true) {
     if (amHours == Hours) {  // set amTemp for the Night time setting
       if (amMinutes >= Minutes && amMinutes <= Minutes) {
-        amTemp = amTemperature;
       }
     }
   }
   if (Am == false) {
     if (pmHours == Hours) {  // set pmTemp for the Night time setting
-      if (pmMinutes >= Minutes && pmMinutes <= Minutes)
-      {
+      if (pmMinutes >= Minutes && pmMinutes <= Minutes) {
         pmTemp = pmTemperature;
-        Serial.print("pmTemp & pmTemperature = ");
-        Serial.println(pmTemp);
       }
     }
   }
@@ -495,7 +490,6 @@ void sendSensor() {
 *************************************************************/
 
 void startHeaterTimer() {
-  Serial.println("514 void startHeaterTimer");
   heaterOnTime = millis();
   heaterOn = true;
 }
