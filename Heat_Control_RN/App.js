@@ -9,9 +9,21 @@ import SettingsScreen from "./components/Settings.js";
 import GaugeScreen from "./components/Gauges.js";
 import GraphScreen from "./components/Graph.js";
 import HomeScreen from "./components/HomeScreen.js";
+import {useMQTT } from "./components/MQTTService";
 
 const Tab = createMaterialTopTabNavigator();
-function App() {
+
+
+  //   return (
+  //     <SafeAreaView>
+  //       <ScrollView>
+  //         <TemperatureGraph />
+  //       </ScrollView>
+  //     </SafeAreaView>
+  //   );
+  // };
+
+  function App() {
   return (
     <SafeAreaView style={styles.AndroidSafeArea}>
       <NavigationContainer>
@@ -24,7 +36,14 @@ function App() {
       </NavigationContainer>
     </SafeAreaView>
   );
-}
+};
+// export default function App() {
+//   return (
+//     <TemperatureDataProvider>
+//       <AppContent />
+//     </TemperatureDataProvider>
+//   );
+// }
 
 const styles = StyleSheet.create({
   container: {

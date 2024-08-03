@@ -3,7 +3,7 @@ import * as React from "react";
 import Paho from "paho-mqtt";
 import { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /************************************
  *    Creating a new MQTT client    *
@@ -46,13 +46,13 @@ export function GaugeScreen({ navigation }) {
    *  Effect hook to retrieve data    *
    *             start                *
    ***********************************/
-  useEffect(() => {
-    retrieveData("outSide", setOutSideTemp);
-    retrieveData("coolSide", setCoolSideTemp);
-    retrieveData("heater", setControlTemp);
-    retrieveData("amTemperature", setAmTemperature);
-    retrieveData("pmTemperature", setPmTemperature);
-  }, []);
+  // useEffect(() => {
+  //   retrieveData("outSide", setOutSideTemp);
+  //   retrieveData("coolSide", setCoolSideTemp);
+  //   retrieveData("heater", setControlTemp);
+  //   retrieveData("amTemperature", setAmTemperature);
+  //   retrieveData("pmTemperature", setPmTemperature);
+  // }, []);
   /************************************
    *  Effect hook to retrieve data    *
    *               end                *
@@ -83,15 +83,15 @@ export function GaugeScreen({ navigation }) {
       switch (message.destinationName) {
         case "outSide":
           setOutSideTemp(parseInt(message.payloadString));
-          storeData("outSide", message.payloadString);
+          // storeData("outSide", message.payloadString);
           break;
         case "coolSide":
           setCoolSideTemp(parseInt(message.payloadString));
-          storeData("coolSide", message.payloadString);
+          // storeData("coolSide", message.payloadString);
           break;
         case "heater":
           setControlTemp(parseInt(message.payloadString));
-          storeData("heater", message.payloadString);
+          // storeData("heater", message.payloadString);
           break;
         case "amTemperature":
           setAmTemperature(parseInt(message.payloadString));
@@ -103,7 +103,6 @@ export function GaugeScreen({ navigation }) {
           console.log("Unknown topic:", message.destinationName);
       }
     }
-
     client.connect({
       onSuccess: onConnect,
       onFailure: onFailure,
