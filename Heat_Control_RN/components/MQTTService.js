@@ -1,36 +1,78 @@
-// MQTTService.js
 import Paho from "paho-mqtt";
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
-const MQTT_BROKER = 'public.mqtthq.com';
-const MQTT_PORT = 1883;
 const MQTT_TOPICS = ['outSide', 'coolSide', 'heater'];
 
 export const useMQTT = (onMessage) => {
+  const [client, setClient] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+
   useEffect(() => {
     const mqttClient = new Paho.Client(
-      MQTT_BROKER,
-      Number(MQTT_PORT),
+      "public.mqtthq.com",
+      Number(1883),
       `inTopic-${parseInt(Math.random() * 100)}`
     );
 
-    mqttClient.onMessageArrived = (message) => {
-      const topic = message.destinationName;
-      const payload = message.payloadString;
-      onMessage(topic, payload);
+    mqttClient.onConnectionLost = (responseObject) => {
+      if (responseObject.errorCode !== 0) {
+        console.log("Connection lost:", responseObject.errorMessage);
+      }
+      setIsConnected(false);
+      reconnect(mqttClient); // Attempt to reconnect
     };
 
-    mqttClient.connect({
-      onSuccess: () => {
-        console.log('MQTT connected');
-        MQTT_TOPICS.forEach(topic => mqttClient.subscribe(topic));
-      }
-    });
+    mqttClient.onMessageArrived = (message) => {
+      onMessage(message.destinationName, message.payloadString);
+    };
+
+    const connectClient = () => {
+      mqttClient.connect({
+        onSuccess: () => {
+          console.log("Connected!");
+          setIsConnected(true);
+          MQTT_TOPICS.forEach(topic => mqttClient.subscribe(topic));
+        },
+        onFailure: (err) => {
+          console.log("Failed to connect:", err);
+          setIsConnected(false);
+          setTimeout(connectClient, 5000); // Retry connection after 5 seconds
+        },
+        keepAliveInterval: 60, // Increase keep-alive interval
+      });
+    };
+
+    connectClient();
+    setClient(mqttClient);
 
     return () => {
       if (mqttClient.isConnected()) {
         mqttClient.disconnect();
       }
     };
-  }, [onMessage]); // Add onMessage as a dependency to avoid re-renders
+  }, [onMessage]);
+
+  const reconnect = (mqttClient) => {
+    if (mqttClient && !mqttClient.isConnected()) {
+      console.log("Attempting to reconnect...");
+      mqttClient.connect({
+        onSuccess: () => {
+          console.log("Reconnected successfully.");
+          setIsConnected(true);
+          MQTT_TOPICS.forEach(topic => mqttClient.subscribe(topic));
+        },
+        onFailure: (err) => {
+          console.log("Failed to reconnect:", err);
+          setIsConnected(false);
+          setTimeout(() => reconnect(mqttClient), 5000); // Retry reconnection after 5 seconds
+        },
+      });
+    } else if (mqttClient && mqttClient.isConnected()) {
+      console.log("Already connected.");
+    } else {
+      console.log("Client is not initialized.");
+    }
+  };
+
+  return { client, isConnected, reconnect: () => reconnect(client) };
 };
