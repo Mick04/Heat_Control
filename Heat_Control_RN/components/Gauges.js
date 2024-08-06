@@ -1,20 +1,20 @@
 // Gauges.js
 import * as React from "react";
-// import Paho from "paho-mqtt";
+import Paho from "paho-mqtt";
 import { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 // import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useMQTT,reconnect } from "./MQTTService";
+
 /************************************
  *    Creating a new MQTT client    *
  *              start               *
  * **********************************/
 
-// const client = new Paho.Client(
-//   "public.mqtthq.com",
-//   Number(1883),
-//   `inTopic-${parseInt(Math.random() * 100)}`
-// );
+const client = new Paho.Client(
+  "public.mqtthq.com",
+  Number(1883),
+  `inTopic-${parseInt(Math.random() * 100)}`
+);
 
 /************************************
  *    Creating a new MQTT client    *
@@ -26,7 +26,7 @@ import { useMQTT,reconnect } from "./MQTTService";
  *              start               *
  * **********************************/
 
-export function GaugeScreen({ navigation }) {
+export function GaugeScreen() {
   /************************************
    *          State variables         *
    *              start               *
@@ -63,66 +63,67 @@ export function GaugeScreen({ navigation }) {
    *                          start                                   *
    * ******************************************************************/
 
-  // useEffect(() => {
-    // function onConnect() {
-    //   console.log("Connected!");
-    //   setIsConnected(true);
-    //   client.subscribe("outSide");
-    //   client.subscribe("coolSide");
-    //   client.subscribe("heater");
-    //   client.subscribe("amTemperature");
-    //   client.subscribe("pmTemperature");
-    // }
+  useEffect(() => {
+    function onConnect() {
+      console.log("Connected!");
+      setIsConnected(true);
+      client.subscribe("outSide");
+      client.subscribe("coolSide");
+      client.subscribe("heater");
+      client.subscribe("amTemperature");
+      client.subscribe("pmTemperature");
+    }
 
-    // function onFailure() {
-    //   console.log("Failed to connect!");
-    //   setIsConnected(false);
-    // }
+    function onFailure() {
+      console.log("Failed to connect!");
+      setIsConnected(false);
+    }
 
-    // function onMessageReceived(message) {
-    //   switch (message.destinationName) {
-    //     case "outSide":
-    //       setOutSideTemp(parseInt(message.payloadString));
-    //       // storeData("outSide", message.payloadString);
-    //       break;
-    //     case "coolSide":
-    //       setCoolSideTemp(parseInt(message.payloadString));
-    //       // storeData("coolSide", message.payloadString);
-    //       break;
-    //     case "heater":
-    //       setControlTemp(parseInt(message.payloadString));
-    //       // storeData("heater", message.payloadString);
-    //       break;
-    //     case "amTemperature":
-    //       setAmTemperature(parseInt(message.payloadString));
-    //       break;
-    //     case "pmTemperature":
-    //       setPmTemperature(parseInt(message.payloadString));
-    //       break;
-    //     default:
-    //       console.log("Unknown topic:", message.destinationName);
-    //   }
-    // }
-    // client.connect({
-    //   onSuccess: onConnect,
-    //   onFailure: onFailure,
-    // });
+    function onMessageReceived(message) {
+      switch (message.destinationName) {
+        case "outSide":
+          setOutSideTemp(parseInt(message.payloadString));
+          // storeData("outSide", message.payloadString);
+          break;
+        case "coolSide":
+          setCoolSideTemp(parseInt(message.payloadString));
+          // storeData("coolSide", message.payloadString);
+          break;
+        case "heater":
+          setControlTemp(parseInt(message.payloadString));
+          // storeData("heater", message.payloadString);
+          break;
+        case "amTemperature":
+          setAmTemperature(parseInt(message.payloadString));
+          break;
+        case "pmTemperature":
+          setPmTemperature(parseInt(message.payloadString));
+          break;
+        default:
+          console.log("Unknown topic:", message.destinationName);
+      }
+    }
 
-    // client.onMessageArrived = onMessageReceived;
+    client.connect({
+      onSuccess: onConnect,
+      onFailure: onFailure,
+    });
 
-  //   return () => {
-  //     client.disconnect();
-  //   };
-  // }, []);
+    client.onMessageArrived = onMessageReceived;
+
+    return () => {
+      client.disconnect();
+    };
+  }, []);
   /*************************************************************
    *   Cleanup function to disconnect when component unmounts  *
    *                            end                            *
    * ***********************************************************/
 
-  /******************************************
-   *       Function to store data           *
-   *                start                   *
-   ******************************************/
+  // /******************************************
+  //  *       Function to store data           *
+  //  *                start                   *
+  //  ******************************************/
   // const storeData = async (key, value) => {
   //   try {
   //     await AsyncStorage.setItem(key, value);
@@ -130,15 +131,15 @@ export function GaugeScreen({ navigation }) {
   //     console.log(e);
   //   }
   // };
-  /******************************************
-   *       Function to store data           *
-   *                  end                   *
-   ******************************************/
+  // /******************************************
+  //  *       Function to store data           *
+  //  *                  end                   *
+  //  ******************************************/
 
-  /*******************************************
-   *      Function to retrieve data          *
-   *               start                     *
-   *******************************************/
+  // /*******************************************
+  //  *      Function to retrieve data          *
+  //  *               start                     *
+  //  *******************************************/
   // const retrieveData = async (key, setState) => {
   //   try {
   //     const value = await AsyncStorage.getItem(key);
@@ -149,37 +150,38 @@ export function GaugeScreen({ navigation }) {
   //     console.log(e);
   //   }
   // };
-  /*******************************************
-   *     Function to retrieve data           *
-   *                 end                     *
-   *******************************************/
+  // /*******************************************
+  //  *     Function to retrieve data           *
+  //  *                 end                     *
+  //  *******************************************/
 
   /*******************************************
    *      Function to reconnect              *
    *               start                     *
    *******************************************/
-  // const reconnect = () => {
-  //   if (!client.isConnected()) {
-  //     console.log("Attempting to reconnect...");
-  //     client.connect({
-  //       onSuccess: () => {
-  //         console.log("Reconnected successfully.");
-  //         setIsConnected(true);
-  //         client.subscribe("outSide");
-  //         client.subscribe("coolSide");
-  //         client.subscribe("heater");
-  //         client.subscribe("amTemperature");
-  //         client.subscribe("pmTemperature");
-  //       },
-  //       onFailure: (err) => {
-  //         console.log("Failed to reconnect:", err);
-  //         setIsConnected(false);
-  //       },
-  //     });
-  //   } else {
-  //     console.log("Already connected.");
-  //   }
-  // };
+  const reconnect = () => {
+    if (!client.isConnected()) {
+      console.log("Attempting to reconnect...");
+      client.connect({
+        onSuccess: () => {
+          console.log("Reconnected successfully.");
+          setIsConnected(true);
+          client.subscribe("outSide");
+          client.subscribe("coolSide");
+          client.subscribe("heater");
+          client.subscribe("amTemperature");
+          client.subscribe("pmTemperature");
+          console.log("************Subscribing to topics...");
+        },
+        onFailure: (err) => {
+          console.log("Failed to reconnect:", err);
+          setIsConnected(false);
+        },
+      });
+    } else {
+      console.log("Already connected.");
+    }
+  };
   /*******************************************
    *      Function to reconnect              *
    *                 end                     *

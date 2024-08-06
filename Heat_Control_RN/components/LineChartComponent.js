@@ -1,8 +1,12 @@
+// LineChartComponent 
 import React from "react";
 import { Text, Dimensions } from "react-native";
 import { LineChart } from "react-native-chart-kit";
 
+const screenWidth = Dimensions.get('window').width;
+
 const LineChartComponent = ({ title, data, labels }) => {
+    console.log("*******LineChartComponent", title, data, labels);
   return (
     <>
       <Text>{title}</Text>
@@ -16,9 +20,9 @@ const LineChartComponent = ({ title, data, labels }) => {
             },
           ],
         }}
-        width={Dimensions.get("window").width} // from react-native
-        height={220}
-        yAxisLabel="°"
+        width={screenWidth} // from react-native
+        height={180}
+        yAxisLabel=""
         yAxisSuffix="°C"
         yAxisInterval={1} // optional, defaults to 1
         chartConfig={{
