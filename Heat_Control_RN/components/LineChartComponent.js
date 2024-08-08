@@ -26,12 +26,12 @@ const LineChartComponent = ({ title, data, labels }) => {
         yAxisSuffix="°C"
         yAxisInterval={1} // optional, defaults to 1
         chartConfig={{
-          backgroundColor: "#e26a00",
-          backgroundGradientFrom: "#fb8c00",
+          backgroundColor: "#FFFDD0",
+          backgroundGradientFrom: "#FFFDD0",
           backgroundGradientTo: "#ffa726",
           decimalPlaces: 2, // optional, defaults to 2dp
-          color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-          labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+          color: (opacity = 1) => `rgba(255, 255, 210, ${opacity})`,
+          labelColor: (opacity = 1) => `rgba(108, 0, 255, ${opacity})`,
           style: {
             borderRadius: 16,
           },

@@ -20,7 +20,7 @@ import backgroundImage from "../assets/background-image.png";
   </TouchableOpacity>
     <TouchableOpacity
     style = {styles.button}
-    onPress={() => navigation.navigate("Gauges")}
+    onPress={() => navigation.navigate("Gauges2")}
   >
     <Text style={styles.buttonText} >Go to Gauges screen</Text>
   </TouchableOpacity>
