@@ -47,7 +47,7 @@ uint_fast8_t pmMinutes;
 bool Am;
 // bool Reset = false;  // set when slider is moved
 bool StartUp = 1;
-
+bool startTimer = 1;
 /********************************************
       settup the time variables start
  * ******************************************/
@@ -62,7 +62,7 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 unsigned long currentMillis = millis();
 unsigned long lastMillis = 0;
 unsigned long previousMillis = 0;
-const long interval = 5000;
+const long interval = 25000;
 /********************************************
       settup the time variables end
  * ******************************************/
@@ -205,6 +205,24 @@ void loop() {
   Hours = timeClient.getHours();
   Minutes = timeClient.getMinutes();
   seconds = timeClient.getSeconds();
+  Serial.print("pmTemperature = ");
+  Serial.println(pmTemperature);
+  Serial.print("amTemperature = ");
+  Serial.println(amTemperature);
+  Serial.print("amTemp = ");
+  Serial.println(amTemp);
+  Serial.print("pmTemp = ");
+  Serial.println(pmTemp);
+  Serial.print("Am = ");
+  Serial.println(Am);
+  Serial.print("amHours = ");
+  Serial.print(amHours);
+  Serial.print(": = ");
+  Serial.println(amMinutes);
+  Serial.print("Hours = ");
+  Serial.print(Hours);
+  Serial.print(": ");
+  Serial.println(Minutes);
   Am = true;
   Am = (Hours < 12);
   if (heaterOn) {
@@ -346,24 +364,83 @@ void relay_Control() {
                   start
 * ******************************************/
 void publishTempToMQTT(void) {
-  if (!client.connected()) {
-    // Reconnect to MQTT broker if necessary
-    reconnect();
-  }
-  // Serial.println("publishTempToMQTT");
-  char sensVal[50];
-  float myFloat1 = s1;
-  sprintf(sensVal, "%f", myFloat1);
-  client.publish("outSide", sensVal, true);
+   // Constants
+  
+   unsigned long interval = .5 * 60 * 1000;  // N minutes in milliseconds
 
-  float myFloat2 = s2;
-  sprintf(sensVal, "%f", myFloat2);
-  client.publish("coolSide", sensVal, true);
+   // Track the current time
+   unsigned long currentMillis = millis();
 
-  float myFloat3 = s3;
-  sprintf(sensVal, "%f", myFloat3);
-  client.publish("heater", sensVal, true);
+   // Check if the interval has passed
+   if (currentMillis - previousMillis >= interval) {
+      // Update previousMillis to the current time to reset the timer
+      previousMillis = currentMillis;
+      
+      // Debugging information
+      Serial.print("****** Publishing at (currentMillis = ");
+      Serial.println(currentMillis);
+      Serial.print("previousMillis = ");
+      Serial.println(previousMillis);
+      
+      // Ensure the client is connected to the MQTT broker
+      if (!client.connected()) {
+         reconnect();  // Attempt to reconnect if not connected
+      }
+      
+      // Publish the sensor data
+      char sensVal[50];
+
+      float myFloat1 = s1;
+      sprintf(sensVal, "%f", myFloat1);
+      client.publish("outSide", sensVal, true);
+
+      float myFloat2 = s2;
+      sprintf(sensVal, "%f", myFloat2);
+      client.publish("coolSide", sensVal, true);
+
+      float myFloat3 = s3;
+      sprintf(sensVal, "%f", myFloat3);
+      client.publish("heater", sensVal, true);
+
+      // Timer is reset automatically by updating previousMillis
+   }
 }
+
+// void publishTempToMQTT(void) {
+//    currentMillis = millis();
+//   if (startTimer = 1){
+//     Serial.print("STARTTIMER**********");
+//   previousMillis = currentMillis;
+//   startTimer = 0;
+// }
+// if (currentMillis - previousMillis >= interval){
+//   Serial.print("****** (currentMillis = ");
+//   Serial.println(currentMillis);
+//   Serial.print("previousMillis = ");
+//   Serial.println(previousMillis);
+//   Serial.print("startTimer = ");
+//   Serial.println(startTimer);
+//   if (!client.connected()) {
+//     // Reconnect to MQTT broker if necessary
+//     reconnect();
+//   }
+//   // Serial.println("publishTempToMQTT");
+//   char sensVal[50];
+//   float myFloat1 = s1;
+//   sprintf(sensVal, "%f", myFloat1);
+//   client.publish("outSide", sensVal, true);
+
+//   float myFloat2 = s2;
+//   sprintf(sensVal, "%f", myFloat2);
+//   client.publish("coolSide", sensVal, true);
+
+//   float myFloat3 = s3;
+//   sprintf(sensVal, "%f", myFloat3);
+//   client.publish("heater", sensVal, true);
+//   startTimer = 1;
+// }
+
+// }
 
 /********************************************
          send temperature value
@@ -468,6 +545,7 @@ void sendSensor() {
   if (Am == true) {
     if (amHours == Hours) {  // set amTemp for the Night time setting
       if (amMinutes >= Minutes && amMinutes <= Minutes) {
+        amTemp = amTemperature;
       }
     }
   }

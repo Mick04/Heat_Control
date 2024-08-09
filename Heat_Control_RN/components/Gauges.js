@@ -4,7 +4,11 @@ import Paho from "paho-mqtt";
 import { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 // import AsyncStorage from "@react-native-async-storage/async-storage";
+<<<<<<< HEAD
 
+=======
+import { useMQTT, reconnect } from "./MQTTService";
+>>>>>>> 09bc2c5 (out of step)
 /************************************
  *    Creating a new MQTT client    *
  *              start               *
@@ -63,6 +67,7 @@ export function GaugeScreen() {
    *                          start                                   *
    * ******************************************************************/
 
+<<<<<<< HEAD
   useEffect(() => {
     console.log("Connected! 2 ");
     function onConnect() {
@@ -117,6 +122,54 @@ export function GaugeScreen() {
     });
     console.log("************coolSide£££££££££££££ =", coolSide);
     client.onMessageArrived = onMessageReceived;
+=======
+  // useEffect(() => {
+  // function onConnect() {
+  //   console.log("Connected!");
+  //   setIsConnected(true);
+  //   client.subscribe("outSide");
+  //   client.subscribe("coolSide");
+  //   client.subscribe("heater");
+  //   client.subscribe("amTemperature");
+  //   client.subscribe("pmTemperature");
+  // }
+
+  // function onFailure() {
+  //   console.log("Failed to connect!");
+  //   setIsConnected(false);
+  // }
+
+  function onMessageReceived(message) {
+    switch (message.destinationName) {
+      case "outSide":
+        setOutSideTemp(parseInt(message.payloadString));
+        // storeData("outSide", message.payloadString);
+        break;
+      case "coolSide":
+        setCoolSideTemp(parseInt(message.payloadString));
+        // storeData("coolSide", message.payloadString);
+        break;
+      case "heater":
+        setControlTemp(parseInt(message.payloadString));
+        // storeData("heater", message.payloadString);
+        break;
+      case "amTemperature":
+        setAmTemperature(parseInt(message.payloadString));
+        break;
+      case "pmTemperature":
+        setPmTemperature(parseInt(message.payloadString));
+        break;
+      default:
+        console.log("Unknown topic:", message.destinationName);
+    }
+  }
+  // client.connect({
+  //   onSuccess: onConnect,
+  //   onFailure: onFailure,
+  // });
+
+  // client.onMessageArrived = onMessageReceived;
+>>>>>>> 09bc2c5 (out of step)
 
     return () => {
       client.disconnect();
@@ -166,6 +219,7 @@ export function GaugeScreen() {
    *      Function to reconnect              *
    *               start                     *
    *******************************************/
+<<<<<<< HEAD
   const reconnect = () => {
     if (!client.isConnected()) {
       console.log("Attempting to reconnect...");
@@ -189,6 +243,32 @@ export function GaugeScreen() {
       console.log("Already connected.");
     }
   };
+=======
+  // const reconnect = () => {
+  //   if (!client.isConnected()) {
+  //     console.log("Attempting to reconnect...");
+  //     client.connect({
+  //       onSuccess: () => {
+  //         console.log("Reconnected successfully.");
+  //         setIsConnected(true);
+  //         client.subscribe("outSide");
+  //         client.subscribe("coolSide");
+  //         client.subscribe("heater");
+  //         client.subscribe("amTemperature");
+  //         client.subscribe("pmTemperature");
+  //       },
+  //       onFailure: (err) => {
+  //         console.log("Failed to reconnect:", err);
+  //         setIsConnected(false);
+  //       },
+  //     });
+  //   } else {
+  //     console.log("Already connected.");
+  //   }
+  // };
+  // const { isConnected, reconnect } = useMQTT(onMessage);
+
+>>>>>>> 09bc2c5 (out of step)
   /*******************************************
    *      Function to reconnect              *
    *                 end                     *
@@ -213,7 +293,12 @@ export function GaugeScreen() {
         <Text style={styles.tempText}>{"heater Temperature = " + heater}</Text>
       </View>
       <View style={styles.connectionStatus}>
-        <Text style={[styles.connectionStatus, { color: isConnected ? "green" : "red" }]}>
+        <Text
+          style={[
+            styles.connectionStatus,
+            { color: isConnected ? "green" : "red" },
+          ]}
+        >
           {isConnected
             ? "Connected to MQTT Broker"
             : "Disconnected from MQTT Broker"}
@@ -248,7 +333,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   tempText: {
-   fontWeight: "bold",
+    fontWeight: "bold",
     color: "#008060",
     fontSize: 20,
   },
@@ -263,7 +348,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   connectionStatus: {
-    fontSize: 20, 
+    fontSize: 20,
     margin: 20,
   },
 });
