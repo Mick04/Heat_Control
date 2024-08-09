@@ -1,10 +1,18 @@
-// Gauges.js
 import * as React from "react";
 import Paho from "paho-mqtt";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+} from "react-native";
+import Svg, { Circle, G } from "react-native-svg";
 import { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-// import AsyncStorage from "@react-native-async-storage/async-storage";
 
+
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 /************************************
  *    Creating a new MQTT client    *
  *              start               *
@@ -26,45 +34,32 @@ const client = new Paho.Client(
  *              start               *
  * **********************************/
 
-export function GaugeScreen() {
-  /************************************
-   *          State variables         *
-   *              start               *
-   * **********************************/
-  const [outSide, setOutSideTemp] = useState(0);
-  const [coolSide, setCoolSideTemp] = useState(0);
-  const [heater, setControlTemp] = useState(0);
-  const [amTemperature, setAmTemperature] = useState(0);
-  const [pmTemperature, setPmTemperature] = useState(0);
+export default function DialsScreen({
+  // coolSide = 15,
+  // coolSide = 75,
+  radius = 60,
+  strokeWidth = 10,
+  duration = 500,
+  color = "tomato",
+  delay = 0,
+  textColor,
+  max = 100,
+}) {
+   const [outSide, setOutSideTemp] = useState([]);
+  const [coolSide, setCoolSideTemp] = useState([]);
+  const [heater, setControlTemp] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
-  /************************************
-   *          State variables         *
-   *                end               *
-   * **********************************/
-
-  /************************************
-   *  Effect hook to retrieve data    *
-   *             start                *
-   ***********************************/
-  // useEffect(() => {
-  //   retrieveData("outSide", setOutSideTemp);
-  //   retrieveData("coolSide", setCoolSideTemp);
-  //   retrieveData("heater", setControlTemp);
-  //   retrieveData("amTemperature", setAmTemperature);
-  //   retrieveData("pmTemperature", setPmTemperature);
-  // }, []);
-  /************************************
-   *  Effect hook to retrieve data    *
-   *               end                *
-   ***********************************/
-
+  const circleRef = React.useRef();
+  const halfCircle = radius + strokeWidth;
+  const circleCircumference = 2 * Math.PI * radius;
+  const strokeDashoffset =
+    circleCircumference - (circleCircumference * coolSide) / max;
   /********************************************************************
    *   Effect hook to establish MQTT connection and handle messages   *
    *                          start                                   *
    * ******************************************************************/
 
   useEffect(() => {
-    console.log("Connected! 2 ");
     function onConnect() {
       console.log("Connected!");
       setIsConnected(true);
@@ -72,17 +67,16 @@ export function GaugeScreen() {
       client.subscribe("coolSide");
       client.subscribe("heater");
       client.subscribe("amTemperature");
-      client.subscribe("pmTemperature");console.log("************coolSide£££££££££££££ =", coolSide);
-      console.log("************coolSide 2 £££££££££££££ =", coolSide);
+      client.subscribe("pmTemperature");
+      console.log("************coolSide£££££££££££££ =", coolSide);
     }
 
     function onFailure() {
       console.log("Failed to connect!");
       setIsConnected(false);
     }
-
     function onMessageReceived(message) {
-      console.log("Message received 2 :", message.destinationName);
+      console.log("Message received:", message.destinationName);
       switch (message.destinationName) {
         case "outSide":
           setOutSideTemp(parseInt(message.payloadString));
@@ -91,17 +85,18 @@ export function GaugeScreen() {
           break;
         case "coolSide":
           setCoolSideTemp(parseInt(message.payloadString));
-          console.log("************coolSide 2 |||||||||||||| =", coolSide);
+          console.log("222222222Unknown topic:", message.destinationName);
           // storeData("coolSide", message.payloadString);
+          console.log("************setCoolSideTemp|||||||||||||| =", coolSide);
           break;
         case "heater":
           setControlTemp(parseInt(message.payloadString));
-          console.log("3333333333333Unknown 2 topic:", message.destinationName);
+          console.log("3333333333333Unknown topic:", message.destinationName);
           // storeData("heater", message.payloadString);
           break;
         case "amTemperature":
           setAmTemperature(parseInt(message.payloadString));
-          console.log("44444444444Unknown topic:", message.destinationName); 
+          console.log("44444444444Unknown topic:", message.destinationName);
           break;
         case "pmTemperature":
           setPmTemperature(parseInt(message.payloadString));
@@ -127,41 +122,6 @@ export function GaugeScreen() {
    *                            end                            *
    * ***********************************************************/
 
-  // /******************************************
-  //  *       Function to store data           *
-  //  *                start                   *
-  //  ******************************************/
-  // const storeData = async (key, value) => {
-  //   try {
-  //     await AsyncStorage.setItem(key, value);
-  //   } catch (e) {
-  //     console.log(e);
-  //   }
-  // };
-  // /******************************************
-  //  *       Function to store data           *
-  //  *                  end                   *
-  //  ******************************************/
-
-  // /*******************************************
-  //  *      Function to retrieve data          *
-  //  *               start                     *
-  //  *******************************************/
-  // const retrieveData = async (key, setState) => {
-  //   try {
-  //     const value = await AsyncStorage.getItem(key);
-  //     if (value !== null) {
-  //       setState(parseInt(value));
-  //     }
-  //   } catch (e) {
-  //     console.log(e);
-  //   }
-  // };
-  // /*******************************************
-  //  *     Function to retrieve data           *
-  //  *                 end                     *
-  //  *******************************************/
-
   /*******************************************
    *      Function to reconnect              *
    *               start                     *
@@ -179,6 +139,9 @@ export function GaugeScreen() {
           client.subscribe("amTemperature");
           client.subscribe("pmTemperature");
           console.log("************Subscribing to topics...");
+          console.log("coolSide", coolSide);
+          console.log("outSide", outSide);
+          console.log("coolSide", heater);
         },
         onFailure: (err) => {
           console.log("Failed to reconnect:", err);
@@ -194,26 +157,59 @@ export function GaugeScreen() {
    *                 end                     *
    *******************************************/
 
+  React.useEffect(() => {
+    const maxPerc = (100 * coolSide) / max;
+  });
+console.log("coolSide", coolSide);
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Gauges</Text>
-      <Text style={styles.TargetTempText}>
-        {"Am Traget Temperature = " + amTemperature}{" "}
-      </Text>
-      <Text style={styles.TargetTempText}>
-        {"Pm Target Temperature = " + pmTemperature}{" "}
-      </Text>
-      <View style={styles.tempContainer}>
-        <Text style={styles.tempText}>
-          {"outSide Temperature = " + outSide + "\n"}
-        </Text>
-        <Text style={styles.tempText}>
-          {"coolSide Temperature = " + coolSide + "\n"}
-        </Text>
-        <Text style={styles.tempText}>{"heater Temperature = " + heater}</Text>
-      </View>
+      <Svg
+        width={radius * 2}
+        height={radius * 2}
+        viewBox={`0 0 ${halfCircle * 2} ${halfCircle * 2}`}
+      >
+        <G rotation="-90" origin={`${halfCircle}, ${halfCircle}`}>
+          <AnimatedCircle
+            ref={circleRef}
+            cx="50%"
+            cy="50%"
+            stroke={color}
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            r={radius}
+            fill="transparent"
+            strokeOpacity={0.2}
+          />
+          <Circle
+            cx="50%"
+            cy="50%"
+            stroke={color}
+            strokeWidth={strokeWidth}
+            r={radius}
+            fill="transparent"
+            strokeDasharray={circleCircumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+          />
+        </G>
+      </Svg>
+      <TextInput
+        underlineColorAndroid="transparent"
+        editable={false}
+        value={String(coolSide)}
+        style={[
+          StyleSheet.absoluteFillObject,
+          { fontSize: radius / 2, color: textColor ?? color },
+          { fontWeight: "bold", textAlign: "center" },
+        ]}
+      />
       <View style={styles.connectionStatus}>
-        <Text style={[styles.connectionStatus, { color: isConnected ? "green" : "red" }]}>
+        <Text
+          style={[
+            styles.connectionStatus,
+            { color: isConnected ? "green" : "red" },
+          ]}
+        >
           {isConnected
             ? "Connected to MQTT Broker"
             : "Disconnected from MQTT Broker"}
@@ -229,42 +225,7 @@ export function GaugeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    marginTop: 50,
-    paddingTop: 50,
-  },
-  TargetTempText: {
-    fontSize: 24,
-    color: "blue",
-    padding: 10,
-  },
-  heading: {
-    fontSize: 24,
-    color: "red",
-    padding: 30,
-  },
-  tempContainer: {
-    marginTop: 30,
-    marginBottom: 40,
-  },
-  tempText: {
-   fontWeight: "bold",
-    color: "#008060",
-    fontSize: 20,
-  },
-  reconnectButton: {
-    backgroundColor: "blue",
-    padding: 10,
-    margin: 10,
-    borderRadius: 5,
-  },
-  reconnectText: {
-    color: "white",
-    fontSize: 20,
-  },
-  connectionStatus: {
-    fontSize: 20, 
-    margin: 20,
   },
 });
-export default GaugeScreen;
