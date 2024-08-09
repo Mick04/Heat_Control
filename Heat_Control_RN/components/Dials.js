@@ -51,9 +51,9 @@ export default function DialsScreen({
   const [isConnected, setIsConnected] = useState(false);
   const circleRef = React.useRef();
   const halfCircle = radius + strokeWidth;
-  const circleCircumference = 2 * Math.PI * radius;
+  const circleCoolSide = 2 * Math.PI * radius;
   const strokeDashoffset =
-    circleCircumference - (circleCircumference * coolSide) / max;
+    circleCoolSide - (circleCoolSide * coolSide) / max;
   /********************************************************************
    *   Effect hook to establish MQTT connection and handle messages   *
    *                          start                                   *
@@ -163,6 +163,9 @@ export default function DialsScreen({
 console.log("coolSide", coolSide);
   return (
     <View style={styles.container}>
+    <View>
+<Text>coolSide</Text>
+  </View>
       <Svg
         width={radius * 2}
         height={radius * 2}
@@ -187,12 +190,54 @@ console.log("coolSide", coolSide);
             strokeWidth={strokeWidth}
             r={radius}
             fill="transparent"
-            strokeDasharray={circleCircumference}
+            strokeDasharray={circleCoolSide}
             strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
           />
         </G>
       </Svg>
+      <TextInput
+        underlineColorAndroid="transparent"
+        editable={false}
+        value={String(coolSide)}
+        style={[
+          StyleSheet.absoluteFillObject,
+          { fontSize: radius / 2, color: textColor ?? color },
+          { fontWeight: "bold", textAlign: "center" },
+        ]}
+      />
+      <Svg
+        width={radius * 2}
+        height={radius * 2}
+        viewBox={`0 0 ${halfCircle * 2} ${halfCircle * 2}`}
+      >
+
+        <G rotation="-90" origin={`${halfCircle}, ${halfCircle}`}>
+          <AnimatedCircle
+            ref={circleRef}
+            cx="50%"
+            cy="50%"
+            stroke={color}
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+            r={radius}
+            fill="transparent"
+            strokeOpacity={0.2}
+          />
+          <Circle
+            cx="50%"
+            cy="50%"
+            stroke={color}
+            strokeWidth={strokeWidth}
+            r={radius}
+            fill="transparent"
+            strokeDasharray={circleCoolSide}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+          />
+        </G>
+      </Svg>
+
       <TextInput
         underlineColorAndroid="transparent"
         editable={false}
