@@ -45,6 +45,7 @@ uint_fast8_t amMinutes;
 uint_fast8_t pmHours;
 uint_fast8_t pmMinutes;
 bool Am;
+bool heaterStatus = false;
 // bool Reset = false;  // set when slider is moved
 bool StartUp = 1;
 
@@ -73,7 +74,7 @@ const long interval = 5000;
 
 const char *ssid = "Gimp";
 const char *password = "FC7KUNPX";
-const char *mqtt_server = "public.mqtthq.com";
+const char *mqtt_server = "broker.hivemq.com";
 
 // the sender email credentials
 #define SENDER_EMAIL "esp8266heaterapp@gmail.com";
@@ -206,10 +207,27 @@ void loop() {
   Minutes = timeClient.getMinutes();
   seconds = timeClient.getSeconds();
   Am = true;
-  Am = (Hours < 12);
+  // Am = (Hours < 12);
   if (heaterOn) {
     checkHeaterTimeout();
   }
+   Serial.print("Am =");
+  Serial.println(Am);
+   Serial.print("amHours =");
+  Serial.println(amHours);
+  Serial.print("amMinutes =");
+  Serial.println(amMinutes);
+  Serial.print("pmHours =");
+  Serial.println(pmHours);
+  Serial.print("pmMinutes =");
+  Serial.println(pmMinutes);
+  Serial.print("amTemp =");
+  Serial.println(amTemp);
+  Serial.print("pmTemp =");
+  Serial.println(pmTemp);
+  Serial.print("StartUp =");
+  Serial.println(StartUp);
+
 }
 /********************************************
   *       connect to the internet start.      *
@@ -239,8 +257,8 @@ void setup_wifi() {
  * ******************************************/
 void callback(char *topic, byte *payload, unsigned int length) {
   // Null-terminate the payload to treat it as a string
+  Serial.print("*****call-back");
   payload[length] = '\0';
-
   if (strstr(topic, "amTemperature")) {
     sscanf((char *)payload, "%d", &amTemperature);
     if (StartUp == 1) {
@@ -255,10 +273,20 @@ void callback(char *topic, byte *payload, unsigned int length) {
   }
   if (strstr(topic, "AMtime")) {
     sscanf((char *)payload, "%d:%d", &amHours, &amMinutes);
+    //   if (StartUp == 1) {
+    //   amHours = amHours;
+    //   amMinutes = amMinutes;
+    // }
+     Serial.print("£££££££££££ amHours = ");
+    Serial.println(amHours);
+     Serial.print("£££££££££££ amMinutes = ");
+    Serial.println(amMinutes);
   }
 
   if (strstr(topic, "PMtime")) {
     sscanf((char *)payload, "%d:%d", &pmHours, &pmMinutes);
+     Serial.print("£££££££££££ AMtime = ");
+    Serial.println(AMtime);
   }
   if (amTemp != 0 && pmTemp != 0) {
     StartUp = 0;
@@ -309,12 +337,14 @@ void relay_Control() {
     if (s3 < amTemp) {
       digitalWrite(Relay_Pin, HIGH);
       digitalWrite(LED_Pin, HIGH);  // LED_Pin on
+      client.publish("heaterStatus", "ON");
       if (!heaterOn) {
         startHeaterTimer();
       }
     } else if (s3 > amTemp) {
       digitalWrite(Relay_Pin, LOW);
       digitalWrite(LED_Pin, LOW);  // LED_Pin off
+       client.publish("heaterStatus","OFF");
       heaterOn = false;
     }
   }
@@ -323,12 +353,14 @@ void relay_Control() {
     if (s3 < pmTemp) {
       digitalWrite(Relay_Pin, HIGH);
       digitalWrite(LED_Pin, LOW);  // builtin LED_Pin on
+      client.publish("heaterStatus", "ON");
       if (!heaterOn) {
         startHeaterTimer();
       }
     } else if (s3 > pmTemp) {
       digitalWrite(Relay_Pin, LOW);
       digitalWrite(LED_Pin, LOW);  // LED_Pin off
+      client.publish("heaterStatus","OFF");
       heaterOn = false;
     }
   }
@@ -465,15 +497,20 @@ void sendSensor() {
                      // change celsius to fahrenheit if you prefer output in Fahrenheit;
     s3 = (celsius);  //Heater RED heater
   }
+  Serial.print("AM = ");
+  Serial.println(Am);
   if (Am == true) {
     if (amHours == Hours) {  // set amTemp for the Night time setting
       if (amMinutes >= Minutes && amMinutes <= Minutes) {
+        Serial.print("@@@@@@@@ set pmTemp");
+        amTemp = amTemperature;
       }
     }
   }
   if (Am == false) {
     if (pmHours == Hours) {  // set pmTemp for the Night time setting
       if (pmMinutes >= Minutes && pmMinutes <= Minutes) {
+         Serial.print("@@@@@@@@ set pmTemp");
         pmTemp = pmTemperature;
       }
     }

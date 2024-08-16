@@ -13,7 +13,7 @@ import {
 
 import DatePickerModal from "./DatePickerModal"; // Adjust the path as necessary
 import TemperaturePicker from "./TemperaturePicker";
-
+import { useMQTT } from './MQTTContext';
 /************************************
  *    Creating a new MQTT client    *
  *              start               *
@@ -38,7 +38,9 @@ export function SettingsScreen() {
   const [isPMDatePickerVisible, setPMDatePickerVisibility] = useState(false);
   const [AMtime, setAMTime] = useState("");
   const [PMtime, setPMTime] = useState("");
-  const [isConnected, setIsConnected] = useState(false);
+  // const [isConnected, setIsConnected] = useState(false);
+  
+  const { client, isConnected, messages } = useMQTT(); // Access MQTT context
 
   const handleOpenAMDatePicker = () => setAMDatePickerVisibility(true);
   const handleOpenPMDatePicker = () => setPMDatePickerVisibility(true);
@@ -70,141 +72,58 @@ export function SettingsScreen() {
    * ******************************************************************/
 
   useEffect(() => {
-    const clearRetainedMessages = () => {
-      const clearMessage = new Paho.Message("");
-      clearMessage.retained = true;
-  
-      ["control"].forEach((topic) => {
-        clearMessage.destinationName = topic;
-        client.send(clearMessage);
-      });
-    };
-  
-    function onConnect() {
-      console.log("Connected!");
-      setIsConnected(true);
-      client.subscribe("control");
-      client.subscribe("amTemperature");
-      client.subscribe("pmTemperature");
-      client.subscribe("AMtime");
-      client.subscribe("PMtime");
-      clearRetainedMessages(); // Clear retained messages
-    }
-  
-    function onFailure() {
-      console.log("Failed to connect!");
-      setIsConnected(false);
-    }
-  
-    function onMessageReceived(message) {
-      const payload = message.payloadString;
-      console.log(`Message received on topic ${message.destinationName} - ${payload}`);
-      switch (message.destinationName) {
-        case "amTemperature":
-          setAmTemperature(payload);
-          break;
-        case "pmTemperature":
-          setPmTemperature(payload);
-          break;
-        case "AMtime":
-          setAMTime(payload);
-          break;
-        case "PMtime":
-          setPMTime(payload);
-          break;
-        default:
-          console.log(`Unhandled topic: ${message.destinationName}`);
-      }
-    }
-  
-    client.onMessageArrived = onMessageReceived;
-    client.connect({ onSuccess: onConnect, onFailure });
-  
-    return () => {
-      client.disconnect();
-    };
-  }, []);
-  
-  /*************************************************************
-   *   Cleanup function to disconnect when component unmounts  *
-   *                            end                            *
-   * ***********************************************************/
+    if (client && isConnected) {
+      client.subscribe('control');
+      client.subscribe('amTemperature');
+      client.subscribe('pmTemperature');
+      client.subscribe('AMtime');
+      client.subscribe('PMtime');
 
-  const reconnect = () => {
-    if (!client.isConnected()) {
-      console.log("Attempting to reconnect...");
-      client.connect({
-        onSuccess: () => {
-          console.log("Reconnected successfully.");
-          setIsConnected(true);
-
-          // Clear previous data
-          setAmTemperature(null);
-          setPmTemperature(null);
-          setAMTime("");
-          setPMTime("");
-
-          // Optionally, subscribe to the topics again
-          client.subscribe("control");
-          client.subscribe("amTemperature");
-          client.subscribe("pmTemperature");
-          client.subscribe("AMtime");
-          client.subscribe("PMtime");
-        },
-        onFailure: (err) => {
-          console.log("Failed to reconnect:", err);
-          setIsConnected(false);
-        },
-      });
-    } else {
-      console.log("Already connected.");
+      return () => {
+        client.unsubscribe('control');
+        client.unsubscribe('amTemperature');
+        client.unsubscribe('pmTemperature');
+        client.unsubscribe('AMtime');
+        client.unsubscribe('PMtime');
+      };
     }
-  };
+  }, [client, isConnected]);
 
   const publishMessage = () => {
-    console.log("publishing message");
     if (!client.isConnected()) {
-      console.log("Client is not connected. Attempting to reconnect...");
-      client.connect({
-        onSuccess: () => {
-          console.log("Reconnected successfully.");
-          sendMessages();
-        },
-        onFailure: (err) => {
-          console.log("Failed to reconnect:", err);
-        },
-      });
+      console.log('Client is not connected. Attempting to reconnect...');
+      reconnect();
     } else {
       sendMessages();
     }
   };
+
   const sendMessages = () => {
     try {
-      const messageAM = new Paho.Message(amTemperature ? amTemperature.toString() : "0");
-      messageAM.destinationName = "amTemperature";
-      messageAM.retained = false; // Set the retain flag
-      client.send(messageAM);
-
-      const messagePM = new Paho.Message(pmTemperature ? pmTemperature.toString(): "0");
-      messagePM.destinationName = "pmTemperature";
-      messagePM.retained = true; // Set the retain flag
-      client.send(messagePM);
-
-      const messageAMTime = new Paho.Message(AMtime ? AMtime.toString(): "00:00");
-      messageAMTime.destinationName = "AMtime";
-      messageAMTime.retained = true; // Set the retain flag
-      client.send(messageAMTime);
-
-      const messagePMTime = new Paho.Message(PMtime ? PMtime.toString(): "00:00");
-      messagePMTime.destinationName = "PMtime";
-      messagePMTime.retained = true; // Set the retain flag
-      client.send(messagePMTime);
-
+      client.publish('amTemperature', amTemperature ? amTemperature.toString() : '0');
+      client.publish('pmTemperature', pmTemperature ? pmTemperature.toString() : '0');
+      client.publish('AMtime', AMtime ? AMtime.toString() : '00:00');
+      client.publish('PMtime', PMtime ? PMtime.toString() : '00:00');
     } catch (err) {
-      console.log("Failed to send messages:", err);
+      console.log('Failed to send messages:', err);
     }
   };
 
+  const reconnect = () => {
+    if (!client.isConnected()) {
+      console.log('Attempting to reconnect...');
+      client.connect({
+        onSuccess: () => {
+          console.log('Reconnected successfully.');
+        },
+        onFailure: (err) => {
+          console.log('Failed to reconnect:', err);
+        },
+      });
+    } else {
+      console.log('Already connected.');
+    }
+  };
   return (
     <SafeAreaView style={styles.container}>
       <View>
