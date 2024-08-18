@@ -89,22 +89,22 @@ export function GaugeScreen() {
       switch (message.destinationName) {
         case "outSide":
           setOutSideTemp(parseInt(message.payloadString));
-          console.log("111111111Unknown topic:", message.destinationName);
+          // console.log("111111111Unknown topic:", message.destinationName);
           // storeData("outSide", message.payloadString);
           break;
         case "coolSide":
           setCoolSideTemp(parseInt(message.payloadString));
-          console.log("************coolSide 2 |||||||||||||| =", coolSide);
+          // console.log("************coolSide 2 |||||||||||||| =", coolSide);
           // storeData("coolSide", message.payloadString);
           break;
         case "heater":
           setControlTemp(parseInt(message.payloadString));
-          console.log("3333333333333Unknown 2 topic:", message.destinationName);
+          // console.log("3333333333333Unknown 2 topic:", message.destinationName);
           // storeData("heater", message.payloadString);
           break;
         case "amTemperature":
           setAmTemperature(parseInt(message.payloadString));
-          console.log("44444444444Unknown topic:", message.destinationName); 
+          // console.log("44444444444Unknown topic:", message.destinationName);
           break;
         case "pmTemperature":
           setPmTemperature(parseInt(message.payloadString));
@@ -125,7 +125,7 @@ export function GaugeScreen() {
       onSuccess: onConnect,
       onFailure: onFailure,
     });
-    console.log("************coolSide£££££££££££££ =", coolSide);
+    // console.log("************coolSide£££££££££££££ =", coolSide);
     client.onMessageArrived = onMessageReceived;
 
     return () => {
@@ -188,7 +188,7 @@ export function GaugeScreen() {
           client.subscribe("heater");
           client.subscribe("amTemperature");
           client.subscribe("pmTemperature");
-          console.log("************Subscribing to topics...");
+          // console.log("************Subscribing to topics...");
         },
         onFailure: (err) => {
           console.log("Failed to reconnect:", err);
@@ -226,7 +226,12 @@ export function GaugeScreen() {
         <Text style={styles.tempText}>{"heater Temperature = " + heater}</Text>
       </View>
       <View style={styles.connectionStatus}>
-        <Text style={[styles.connectionStatus, { color: isConnected ? "green" : "red" }]}>
+        <Text
+          style={[
+            styles.connectionStatus,
+            { color: isConnected ? "green" : "red" },
+          ]}
+        >
           {isConnected
             ? "Connected to MQTT Broker"
             : "Disconnected from MQTT Broker"}
@@ -261,7 +266,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   tempText: {
-   fontWeight: "bold",
+    fontWeight: "bold",
     color: "#008060",
     fontSize: 20,
   },
@@ -276,7 +281,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   connectionStatus: {
-    fontSize: 20, 
+    fontSize: 20,
     margin: 20,
   },
 });

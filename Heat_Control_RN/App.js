@@ -4,13 +4,13 @@ import * as React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { SafeAreaView, StyleSheet, Platform, StatusBar } from "react-native";
 import { createMaterialTopTabNavigator } from "@react-navigation/material-top-tabs";
-
+import { MQTTProvider } from './components/MQTTContext';
 import SettingsScreen from "./components/Settings.js";
 import DialsScreen from "./components/Dials.js";
 import GaugeScreen from "./components/Gauges.js";
 // import GraphScreen from "./components/Graph.js";
 import HomeScreen from "./components/HomeScreen.js";
-import { useMQTT } from "./components/MQTTService";
+
 
 const Tab = createMaterialTopTabNavigator();
 
@@ -25,6 +25,7 @@ const Tab = createMaterialTopTabNavigator();
 
 function App() {
   return (
+    <MQTTProvider>
     <SafeAreaView style={styles.AndroidSafeArea}>
       <NavigationContainer>
         <Tab.Navigator initialRouteName="Home">
@@ -37,6 +38,7 @@ function App() {
         </Tab.Navigator>
       </NavigationContainer>
     </SafeAreaView>
+    </MQTTProvider>
   );
 }
 // export default function App() {
