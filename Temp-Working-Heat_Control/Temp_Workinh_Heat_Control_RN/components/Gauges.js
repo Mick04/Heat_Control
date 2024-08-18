@@ -44,29 +44,12 @@ export function GaugeScreen() {
    *                end               *
    * **********************************/
 
-  /************************************
-   *  Effect hook to retrieve data    *
-   *             start                *
-   ***********************************/
-  // useEffect(() => {
-  //   retrieveData("outSide", setOutSideTemp);
-  //   retrieveData("coolSide", setCoolSideTemp);
-  //   retrieveData("heater", setControlTemp);
-  //   retrieveData("amTemperature", setAmTemperature);
-  //   retrieveData("pmTemperature", setPmTemperature);
-  // }, []);
-  /************************************
-   *  Effect hook to retrieve data    *
-   *               end                *
-   ***********************************/
-
   /********************************************************************
    *   Effect hook to establish MQTT connection and handle messages   *
    *                          start                                   *
    * ******************************************************************/
 
   useEffect(() => {
-    console.log("Connected! 2 ");
     function onConnect() {
       console.log("Connected!");
       setIsConnected(true);
@@ -85,32 +68,23 @@ export function GaugeScreen() {
     }
 
     function onMessageReceived(message) {
-      console.log("Message received 2 :", message.destinationName);
       switch (message.destinationName) {
         case "outSide":
           setOutSideTemp(parseInt(message.payloadString));
-          console.log("111111111Unknown topic:", message.destinationName);
-          // storeData("outSide", message.payloadString);
           break;
         case "coolSide":
           setCoolSideTemp(parseInt(message.payloadString));
-          console.log("************coolSide 2 |||||||||||||| =", coolSide);
-          // storeData("coolSide", message.payloadString);
           break;
         case "heater":
           setControlTemp(parseInt(message.payloadString));
-          console.log("3333333333333Unknown 2 topic:", message.destinationName);
-          // storeData("heater", message.payloadString);
           break;
         case "amTemperature":
           setAmTemperature(parseInt(message.payloadString));
-          console.log("44444444444Unknown topic:", message.destinationName); 
           break;
         case "pmTemperature":
           setPmTemperature(parseInt(message.payloadString));
           break;
         case "gaugeHours":
-          console.log("gaugeHours 2", message.payloadString);
           setgaugeHours(parseInt(message.payloadString));
           break;
         case "gaugeMinutes":
@@ -125,7 +99,6 @@ export function GaugeScreen() {
       onSuccess: onConnect,
       onFailure: onFailure,
     });
-    console.log("************coolSide£££££££££££££ =", coolSide);
     client.onMessageArrived = onMessageReceived;
 
     return () => {
@@ -136,41 +109,6 @@ export function GaugeScreen() {
    *   Cleanup function to disconnect when component unmounts  *
    *                            end                            *
    * ***********************************************************/
-
-  // /******************************************
-  //  *       Function to store data           *
-  //  *                start                   *
-  //  ******************************************/
-  // const storeData = async (key, value) => {
-  //   try {
-  //     await AsyncStorage.setItem(key, value);
-  //   } catch (e) {
-  //     console.log(e);
-  //   }
-  // };
-  // /******************************************
-  //  *       Function to store data           *
-  //  *                  end                   *
-  //  ******************************************/
-
-  // /*******************************************
-  //  *      Function to retrieve data          *
-  //  *               start                     *
-  //  *******************************************/
-  // const retrieveData = async (key, setState) => {
-  //   try {
-  //     const value = await AsyncStorage.getItem(key);
-  //     if (value !== null) {
-  //       setState(parseInt(value));
-  //     }
-  //   } catch (e) {
-  //     console.log(e);
-  //   }
-  // };
-  // /*******************************************
-  //  *     Function to retrieve data           *
-  //  *                 end                     *
-  //  *******************************************/
 
   /*******************************************
    *      Function to reconnect              *
@@ -188,7 +126,6 @@ export function GaugeScreen() {
           client.subscribe("heater");
           client.subscribe("amTemperature");
           client.subscribe("pmTemperature");
-          console.log("************Subscribing to topics...");
         },
         onFailure: (err) => {
           console.log("Failed to reconnect:", err);
@@ -206,10 +143,11 @@ export function GaugeScreen() {
 
   return (
     <View style={styles.container}>
-<Text>
-        {gaugeHours}:{gaugeMinutes} 
-</Text>
       <Text style={styles.heading}>Gauges</Text>
+      <Text style={styles.timeText}>Hours: Minutes</Text>
+      <Text style={styles.time}>
+        {gaugeHours}:{gaugeMinutes}
+      </Text>
       <Text style={styles.TargetTempText}>
         {"Am Traget Temperature = " + amTemperature}{" "}
       </Text>
@@ -226,7 +164,12 @@ export function GaugeScreen() {
         <Text style={styles.tempText}>{"heater Temperature = " + heater}</Text>
       </View>
       <View style={styles.connectionStatus}>
-        <Text style={[styles.connectionStatus, { color: isConnected ? "green" : "red" }]}>
+        <Text
+          style={[
+            styles.connectionStatus,
+            { color: isConnected ? "green" : "red" },
+          ]}
+        >
           {isConnected
             ? "Connected to MQTT Broker"
             : "Disconnected from MQTT Broker"}
@@ -243,8 +186,36 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    marginTop: 50,
+    marginTop: 2,
     paddingTop: 50,
+  },
+  heading: {
+    fontSize: 20,
+    color: "red",
+    // padding: 10,
+    // marginleft: 10,
+    marginBottom: 15,
+    fontStyle: "italic",
+    fontFamily: "sans-serif",
+    textDecorationLine: "underline",
+  },
+  timeText: {
+    justifyContent: "space-between",
+    alignItems: "center",
+    // padding: 10,
+    marginBottom: 10,
+    fontSize: 20,
+    marginLeft: 15,
+    color: "blue",
+  },
+  time: {
+    justifyContent: "space-between",
+    alignItems: "center",
+    // padding: 10,
+    marginLeft: 20,
+    marginBottom: 10,
+    fontSize: 20,
+    color: "blue",
   },
   TargetTempText: {
     fontSize: 24,
@@ -261,7 +232,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   tempText: {
-   fontWeight: "bold",
+    fontWeight: "bold",
     color: "#008060",
     fontSize: 20,
   },
@@ -276,7 +247,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   connectionStatus: {
-    fontSize: 20, 
+    fontSize: 20,
     margin: 20,
   },
 });

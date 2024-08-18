@@ -41,12 +41,13 @@ export default function HomeScreen({ navigation }) {
         >
           <Text style={styles.buttonText}>Go to Settings screen</Text>
         </TouchableOpacity>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.button}
           // onPress={() => navigation.navigate("Graph")}
         >
           {/* <Text style={styles.buttonText}>Go to Graph screen</Text> */}
-        </TouchableOpacity>
+       {/*</TouchableOpacity>
+         */}
       </ImageBackground>
     </SafeAreaView>
   );
