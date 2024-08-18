@@ -238,6 +238,7 @@ void setup_wifi() {
                 Callback start
  * ******************************************/
 void callback(char *topic, byte *payload, unsigned int length) {
+
   // Null-terminate the payload to treat it as a string
   payload[length] = '\0';
 
@@ -253,6 +254,7 @@ void callback(char *topic, byte *payload, unsigned int length) {
       pmTemp = pmTemperature;
     }
   }
+ 
   if (strstr(topic, "AMtime")) {
     sscanf((char *)payload, "%d:%d", &amHours, &amMinutes);
   }
@@ -289,6 +291,7 @@ void reconnect() {
       client.subscribe("AMtime");
       client.subscribe("PMtime");
       client.subscribe("heaterStatus");
+
     } else {
       Serial.print("failed, reconnect = ");
       Serial.print(client.state());
@@ -350,7 +353,6 @@ void publishTempToMQTT(void) {
     // Reconnect to MQTT broker if necessary
     reconnect();
   }
-  // Serial.println("publishTempToMQTT");
   char sensVal[50];
   float myFloat1 = s1;
   sprintf(sensVal, "%f", myFloat1);
@@ -363,6 +365,14 @@ void publishTempToMQTT(void) {
   float myFloat3 = s3;
   sprintf(sensVal, "%f", myFloat3);
   client.publish("heater", sensVal, true);
+
+  int myHours = Hours;
+  sprintf(sensVal, "%d", myHours);
+  client.publish("gaugeHours", sensVal, true);
+
+  int myMinutes = Minutes;
+  sprintf(sensVal, "%d", myMinutes);
+  client.publish("gaugeMinutes", sensVal, true);
 }
 
 /********************************************

@@ -10,7 +10,7 @@ import DialsScreen from "./components/Dials.js";
 import GaugeScreen from "./components/Gauges.js";
 // import GraphScreen from "./components/Graph.js";
 import HomeScreen from "./components/HomeScreen.js";
-import { useMQTT } from "./components/MQTTService";
+// import { useMQTT } from "./components/mqttService";
 
 const Tab = createMaterialTopTabNavigator();
 
