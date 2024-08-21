@@ -113,7 +113,6 @@ export default function DialsScreen({
    *   Cleanup function to disconnect when component unmounts  *
    *                            end                            *
    * ***********************************************************/
-
   /*******************************************
    *      Function to reconnect              *
    *               start                     *
