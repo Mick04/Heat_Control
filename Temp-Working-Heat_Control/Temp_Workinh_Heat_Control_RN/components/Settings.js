@@ -84,6 +84,7 @@ export function SettingsScreen() {
 
     function onConnect() {
       console.log("Connected!");
+      con;
       setIsConnected(true);
       client.subscribe("control");
       client.subscribe("amTemperature");
@@ -162,6 +163,8 @@ export function SettingsScreen() {
           client.subscribe("pmTemperature");
           client.subscribe("AMtime");
           client.subscribe("PMtime");
+          client.subscribe("gaugeHours");
+          client.subscribe("gaugeMinutes");
         },
         onFailure: (err) => {
           console.log("Failed to reconnect:", err);
@@ -227,18 +230,19 @@ export function SettingsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.heading}>Settings</Text>
+      <Text style={styles.timeHeader}>If time is incorrect, check housing</Text>
+
       <View>
         <Text style={styles.timeText}>Hours: Minutes</Text>
         <Text style={styles.time}>
           {gaugeHours}:{gaugeMinutes}
         </Text>
-        {/* Button to toggle the reset state */}
-
         <TouchableOpacity style={styles.reset} onPress={handleOnPress}>
           <Text style={styles.header}>
-            {Reset ? "Press To Reset The Time" : "PRESS WHEN FINISHED"}
+            {Reset ? "Press To Reset" : "PRESS WHEN FINISHED"}
           </Text>
         </TouchableOpacity>
+        {/* Button to toggle the reset state */}
       </View>
 
       {!Reset && ( // Add this line to conditionally render the TimePicker components START
@@ -253,13 +257,13 @@ export function SettingsScreen() {
             />
           </View>
           <TemperaturePicker
-            label="Pm Target "
+            label="Pm wwwwTarget "
             temperature={pmTemperature}
             onValueChange={setPmTemperature}
             // onValueChange={(value) => setPmTemperature(value)}
           />
           <TouchableOpacity
-            style={styles.reset}
+            style={styles.timeReset}
             onPress={handleOpenAMDatePicker}
           >
             <Text style={styles.dataReset}>Select AM Time</Text>
@@ -271,7 +275,10 @@ export function SettingsScreen() {
             <Text style={styles.dataText}>AM Time {AMtime}</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={handleOpenPMDatePicker}>
+          <TouchableOpacity
+            style={styles.timeReset}
+            onPress={handleOpenPMDatePicker}
+          >
             <Text style={styles.dataReset}>Select PM Time </Text>
 
             <DatePickerModal
@@ -336,7 +343,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
-    marginTop: 50,
+    // marginTop: 50,
     marginBottom: 150,
     // justifyContent: "center",
   },
@@ -345,7 +352,7 @@ const styles = StyleSheet.create({
     color: "red",
     // padding: 10,
     marginleft: 10,
-    marginBottom: 15,
+    // marginBottom: 15,
     fontStyle: "italic",
     fontFamily: "sans-serif",
     textDecorationLine: "underline",
@@ -356,14 +363,23 @@ const styles = StyleSheet.create({
     // padding: 10,
     marginBottom: 10,
     fontSize: 20,
-    left: 40,
-    color: "blue",
+    left: 20,
+    color: "green",
+  },
+  timeReset: {
+    justifyContent: "space-between",
+    alignItems: "center",
+    // padding: 10,
+    marginBottom: 10,
+    fontSize: 20,
+    left: 20,
+    color: "green",
   },
   time: {
     justifyContent: "space-between",
     alignItems: "center",
     // padding: 10,
-    marginLeft: 80,
+    marginLeft: 70,
     marginBottom: 10,
     fontSize: 20,
     color: "blue",
@@ -377,6 +393,13 @@ const styles = StyleSheet.create({
     fontFamily: "sans-serif",
     textDecorationLine: "underline",
   },
+  timeHeader: {
+    fontSize: 20,
+    color: "blue",
+    // padding: 10,
+    fontStyle: "italic",
+    fontFamily: "sans-serif",
+  },
 
   dataText: {
     // backgroundColor: "#fff",
@@ -389,30 +412,35 @@ const styles = StyleSheet.create({
     // backgroundColor: "#fff",
     justifyContent: "center",
     alignItems: "center",
-    margin: 10,
+    // margin: 10,
     color: "green",
   },
   reset: {
     // justifyContent: "center",
     alignItems: "center",
-    // padding: 30,
+    padding: 10,
     color: "blue",
+    backgroundColor: "#5ff9",
+    borderRadius: 25,
+    borderWidth: 1,
+    borderColor: "red",
     // Add any additional styling you need for the TouchableOpacity here
   },
   pickerContainer: {
-    marginBottom: 20,
+    // marginBottom: 10,
   },
   temperatureDisplay: {
-    marginTop: 30,
+    marginTop: 10,
     alignItems: "center",
   },
   temperatureText: {
-    padding: 10,
+    // padding: 20,
+    marginBottom: 10,
     fontSize: 20,
     color: "blue",
   },
   connectionStatus: {
-    marginTop: 10,
+    // marginTop: 10,
     fontSize: 20,
   },
   reconnectButton: {

@@ -81,7 +81,8 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 18,
-    marginTop: 30,
+    padding: 10,
+    // marginTop: 30,
     marginLeft: 30,
     alignItems: "center",
     color: "blue",
