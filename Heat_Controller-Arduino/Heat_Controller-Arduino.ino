@@ -261,6 +261,10 @@ void callback(char *topic, byte *payload, unsigned int length) {
 
   if (strstr(topic, "PMtime")) {
     sscanf((char *)payload, "%d:%d", &pmHours, &pmMinutes);
+    Serial.print("pmHours ");
+    Serial.print(pmHours);
+    Serial.print(": pmMinutes");
+    Serial.print(pmMinutes);
   }
   if (amTemp != 0 && pmTemp != 0) {
     StartUp = 0;
