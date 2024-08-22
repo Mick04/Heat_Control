@@ -126,6 +126,10 @@ export function GaugeScreen() {
           client.subscribe("heater");
           client.subscribe("amTemperature");
           client.subscribe("pmTemperature");
+          client.subscribe("AMtime");
+          client.subscribe("PMtime");
+          client.subscribe("gaugeHours");
+          client.subscribe("gaugeMinutes");
         },
         onFailure: (err) => {
           console.log("Failed to reconnect:", err);

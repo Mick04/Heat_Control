@@ -22,12 +22,12 @@ export default function HomeScreen({ navigation }) {
         >
           <Text style={styles.buttonText}>Go to Home screen</Text>
         </TouchableOpacity>
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.button}
           onPress={() => navigation.navigate("Dials")}
         >
           <Text style={styles.buttonText}>Go to Dials screen</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
         <TouchableOpacity
           style={styles.button}
           onPress={() => navigation.navigate("Gauges")}

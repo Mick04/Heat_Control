@@ -11,7 +11,11 @@ import {
 import Svg, { Circle, G } from "react-native-svg";
 import { useEffect, useState } from "react";
 
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+// const widthAndHeight = 150;
+// const series = [323, 321, 123, 789, 537];
+// const sliceColor = ["#fbd203", "#ffb300", "#ff9100", "#ff6c00", "#ff3c00"];
+
+// const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 /************************************
  *    Creating a new MQTT client    *
  *              start               *
@@ -109,7 +113,6 @@ export default function DialsScreen({
    *   Cleanup function to disconnect when component unmounts  *
    *                            end                            *
    * ***********************************************************/
-
   /*******************************************
    *      Function to reconnect              *
    *               start                     *
