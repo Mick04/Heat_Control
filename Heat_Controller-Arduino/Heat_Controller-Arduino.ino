@@ -58,11 +58,6 @@ char sensor[50];
 // Define NTP Client to get time
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
-
-unsigned long currentMillis = millis();
-unsigned long lastMillis = 0;
-unsigned long previousMillis = 0;
-const long interval = 5000;
 /********************************************
       settup the time variables end
  * ******************************************/
@@ -96,7 +91,7 @@ long int value = 0;
  * ******************************************/
 // Timer-related variables
 unsigned long heaterOnTime = 0;
-const unsigned long heaterTimeout = 60000;
+const unsigned long heaterTimeout = 3600000;
 bool heaterOn = false;
 
 // Function prototypes
@@ -311,7 +306,6 @@ void reconnect() {
 *************************************************************/
 
 void relay_Control() {
-  currentMillis = millis();
   if (Am == true) {
     if (s3 < amTemp) {
       digitalWrite(Relay_Pin, HIGH);
