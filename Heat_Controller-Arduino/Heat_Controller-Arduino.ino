@@ -45,6 +45,8 @@ uint_fast8_t amMinutes;
 uint_fast8_t pmHours;
 uint_fast8_t pmMinutes;
 bool Am;
+bool AmFlag;
+bool heaterStatus = false;
 // bool Reset = false;  // set when slider is moved
 bool StartUp = 1;
 
@@ -249,13 +251,14 @@ void callback(char *topic, byte *payload, unsigned int length) {
       pmTemp = pmTemperature;
     }
   }
- 
+
   if (strstr(topic, "AMtime")) {
     sscanf((char *)payload, "%d:%d", &amHours, &amMinutes);
   }
 
   if (strstr(topic, "PMtime")) {
     sscanf((char *)payload, "%d:%d", &pmHours, &pmMinutes);
+    Serial.print("callBack.  ");
     Serial.print("pmHours ");
     Serial.print(pmHours);
     Serial.print(": pmMinutes");
@@ -289,7 +292,7 @@ void reconnect() {
       client.subscribe("pmTemperature");
       client.subscribe("AMtime");
       client.subscribe("PMtime");
-      client.subscribe("heaterStatus");
+      client.subscribe("HeaterStatus");
 
     } else {
       Serial.print("failed, reconnect = ");
@@ -306,30 +309,49 @@ void reconnect() {
 *************************************************************/
 
 void relay_Control() {
-  if (Am == true) {
+  Serial.print("relay_Control -1-  ");
+  Serial.print("Am = ");
+  Serial.print(Am);
+  Serial.print(". amTemp = ");
+  Serial.println(amTemp);
+  Serial.print(". pmTemp = ");
+  Serial.println(pmTemp);
+  Serial.print(". s3 = ");
+  Serial.println(s3);
+
+  if (AmFlag == true) {
     if (s3 < amTemp) {
       digitalWrite(Relay_Pin, HIGH);
       digitalWrite(LED_Pin, HIGH);  // LED_Pin on
+      heaterStatus = true;
       if (!heaterOn) {
         startHeaterTimer();
       }
     } else if (s3 > amTemp) {
       digitalWrite(Relay_Pin, LOW);
       digitalWrite(LED_Pin, LOW);  // LED_Pin off
+      heaterStatus = false;
       heaterOn = false;
     }
   }
 
-  if (Am == false) {
+  if (AmFlag == false) {
+    Serial.print("relay_Control -2-  ");
+    Serial.print("pmTemp = ");
+    Serial.print(pmTemp);
+    Serial.print(". heaterOn = ");
+    Serial.println(heaterOn);
     if (s3 < pmTemp) {
       digitalWrite(Relay_Pin, HIGH);
       digitalWrite(LED_Pin, LOW);  // builtin LED_Pin on
+      heaterStatus = true;
       if (!heaterOn) {
         startHeaterTimer();
       }
     } else if (s3 > pmTemp) {
       digitalWrite(Relay_Pin, LOW);
       digitalWrite(LED_Pin, LOW);  // LED_Pin off
+      heaterStatus = false;
       heaterOn = false;
     }
   }
@@ -371,6 +393,11 @@ void publishTempToMQTT(void) {
   int myMinutes = Minutes;
   sprintf(sensVal, "%d", myMinutes);
   client.publish("gaugeMinutes", sensVal, true);
+
+  const char *heaterStatusStr = heaterStatus ? "true" : "false";
+  client.publish("HeaterStatus", heaterStatusStr, true);
+  Serial.print("Heater Status: ");
+Serial.println(heaterStatusStr);
 }
 
 /********************************************
@@ -391,6 +418,7 @@ void sendSensor() {
        DS18B20 Sensor
          Starts Here
   **************************/
+ char sensVal[50];  // Declare sensVal here
 
   if (!ds.search(addr)) {
     ds.reset_search();
@@ -473,19 +501,37 @@ void sendSensor() {
                      // change celsius to fahrenheit if you prefer output in Fahrenheit;
     s3 = (celsius);  //Heater RED heater
   }
-  if (Am == true) {
-    if (amHours == Hours) {  // set amTemp for the Night time setting
-      if (amMinutes >= Minutes && amMinutes <= Minutes) {
-      }
+  if (Am) {
+    if (amHours == Hours && amMinutes == Minutes) {  // set amTemp for the Night time setting
+      AmFlag = true;
+      amTemp = amTemperature;
+      int myTemp = amTemp;
+      sprintf(sensVal, "%d", myTemp);
+      client.publish("targetTemperature", sensVal, true);
+    }
+  } else {
+    if (pmHours == Hours && pmMinutes == Minutes) {  // set pmTemp for the Night time setting
+      AmFlag = false;
+      pmTemp = pmTemperature;
+      int myTemp = pmTemp;
+      sprintf(sensVal, "%d", myTemp);
+      client.publish("targetTemperature", sensVal, true);
     }
   }
-  if (Am == false) {
-    if (pmHours == Hours) {  // set pmTemp for the Night time setting
-      if (pmMinutes >= Minutes && pmMinutes <= Minutes) {
-        pmTemp = pmTemperature;
-      }
-    }
-  }
+
+  Serial.print("amHours ");
+  Serial.print(amHours);
+  Serial.print(": amMinutes");
+  Serial.println(amMinutes);
+
+  Serial.print("pmHours ");
+  Serial.print(pmHours);
+  Serial.print(": pmMinutes");
+  Serial.print(pmMinutes);
+  Serial.print(". Hours: ");
+  Serial.print(Hours);
+  Serial.print(": Minutes");
+  Serial.println(Minutes);
 }
 /*************************************************************
                              Heater Control
@@ -509,11 +555,11 @@ void checkHeaterTimeout() {
   if (heaterOn && (millis() - heaterOnTime > heaterTimeout)) {
     if (s3 < amTemp || s3 < pmTemp)  // Check if the temperature is still below the threshold
     {
-      client.publish("heaterStatus", "Temperature did not rise within the expected time.");
+      client.publish("HeaterStatus", "Temperature did not rise within the expected time.");
     }
     heaterOn = false;
     // Publish the status to the MQTT topic
-    client.publish("heaterStatus", "Temperature did not rise within the expected time.");
+    client.publish("HeaterStatus", "Temperature did not rise within the expected time.");
 
     // Prepare the email subject and message
     String subject = "Heater Alert";
