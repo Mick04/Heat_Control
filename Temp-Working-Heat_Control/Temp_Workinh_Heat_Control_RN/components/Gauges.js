@@ -45,14 +45,14 @@ export function GaugeScreen() {
   const [pmTemperature, setPmTemperature] = useState(0);
   const [gaugeHours, setgaugeHours] = useState(0);
   const [gaugeMinutes, setgaugeMinutes] = useState(0);
-  const [HeaterStatus, setHeaterStatus] = useState("OFF");
+  const [HeaterStatus, setHeaterStatus] = useState(false);
   const [targetTemperature, settargetTemperature] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
   /************************************
    *          State variables         *
    *                end               *
    * **********************************/
-console.log("heaterStatus", HeaterStatus);
+  console.log("0000000heaterStatus", HeaterStatus);
   /********************************************************************
    *   Effect hook to establish MQTT connection and handle messages   *
    *                          start                                   *
@@ -70,6 +70,9 @@ console.log("heaterStatus", HeaterStatus);
       client.subscribe("gaugeHours");
       client.subscribe("gaugeMinutes");
       client.subscribe("HeaterStatus");
+      client.subscribe("targetTemperature");
+      
+      console.log("111111HeaterStatus", HeaterStatus);
     }
 
     function onFailure() {
@@ -101,13 +104,15 @@ console.log("heaterStatus", HeaterStatus);
           setgaugeMinutes(parseInt(message.payloadString));
           break;
           case "HeaterStatus":
-            setHeaterStatus(message.payloadString.trim() === "1" ? "on" : "off");
-            console.log("HeaterStatus", HeaterStatus);
+            const newStatus = message.payloadString.trim() === "true";
+            setHeaterStatus(newStatus);
+            console.log("333333333 HeaterStatus updated to:", newStatus);
             break;
-          case "targetTemperature":
-            settargetTemperature(message.payloadString.trim());
-            break;
-          default:
+        case "targetTemperature":
+          settargetTemperature(message.payloadString.trim());
+          console.log("5555555555 targetTemperature updated to:", targetTemperature);
+          break;
+        default:
           console.log("Unknown topic:", message.destinationName);
       }
     }
@@ -148,6 +153,7 @@ console.log("heaterStatus", HeaterStatus);
           client.subscribe("gaugeHours");
           client.subscribe("gaugeMinutes");
           client.subscribe("HeaterStatus");
+          console.log("4444444HeaterStatus", HeaterStatus);
         },
 
         onFailure: (err) => {
@@ -175,12 +181,16 @@ console.log("heaterStatus", HeaterStatus);
         <Text style={styles.time}>
           {gaugeHours}:{gaugeMinutes}
         </Text>
-        <Text style={styles.TargetTempText}>
-          {"Heater Status = " + HeaterStatus}{" "}
-          {/* console.log("HeaterStatus", HeaterStatus); */}
+        <Text
+          style={[
+            styles.TargetTempText,
+            { color: HeaterStatus ? "red" : "green" },
+          ]}
+        >
+          {"Heater Status = " + (HeaterStatus ? "on" : "off")}
         </Text>
         <Text style={styles.TargetTempText}>
-          {"Pm Target Temperature = " + pmTemperature}{" "}
+          {"Target Temperature = " + targetTemperature}{" "}
         </Text>
         <View style={styles.tempContainer}>
           <Text style={styles.tempText}>

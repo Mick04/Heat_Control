@@ -235,7 +235,6 @@ export function SettingsScreen() {
         <Text style={styles.timeHeader}>
           If time is incorrect, check housing
         </Text>
-
         <View>
           {/* <Text style={styles.timeText}>Hours: Minutes</Text> */}
           <Text style={styles.time}>

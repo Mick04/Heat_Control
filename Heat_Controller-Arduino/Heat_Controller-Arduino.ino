@@ -397,7 +397,7 @@ void publishTempToMQTT(void) {
   const char *heaterStatusStr = heaterStatus ? "true" : "false";
   client.publish("HeaterStatus", heaterStatusStr, true);
   Serial.print("Heater Status: ");
-Serial.println(heaterStatusStr);
+  Serial.println(heaterStatusStr);
 }
 
 /********************************************
@@ -418,7 +418,7 @@ void sendSensor() {
        DS18B20 Sensor
          Starts Here
   **************************/
- char sensVal[50];  // Declare sensVal here
+  char sensVal[50];  // Declare sensVal here
 
   if (!ds.search(addr)) {
     ds.reset_search();
@@ -508,6 +508,8 @@ void sendSensor() {
       int myTemp = amTemp;
       sprintf(sensVal, "%d", myTemp);
       client.publish("targetTemperature", sensVal, true);
+      Serial.print("Target Temperature: ");
+Serial.println(sensVal);
     }
   } else {
     if (pmHours == Hours && pmMinutes == Minutes) {  // set pmTemp for the Night time setting
@@ -516,6 +518,8 @@ void sendSensor() {
       int myTemp = pmTemp;
       sprintf(sensVal, "%d", myTemp);
       client.publish("targetTemperature", sensVal, true);
+      Serial.print("Target Temperature: ");
+Serial.println(sensVal);
     }
   }
 
