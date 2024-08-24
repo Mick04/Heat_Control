@@ -9,6 +9,7 @@ import {
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
 
 import DatePickerModal from "./DatePickerModal"; // Adjust the path as necessary
@@ -228,120 +229,124 @@ export function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.heading}>Settings</Text>
-      <Text style={styles.timeHeader}>If time is incorrect, check housing</Text>
-
-      <View>
-        <Text style={styles.timeText}>Hours: Minutes</Text>
-        <Text style={styles.time}>
-          {gaugeHours}:{gaugeMinutes}
+    <ScrollView contentContainerStyle={styles.container}>
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.heading}>Settings</Text>
+        <Text style={styles.timeHeader}>
+          If time is incorrect, check housing
         </Text>
-        <TouchableOpacity style={styles.reset} onPress={handleOnPress}>
-          <Text style={styles.header}>
-            {Reset ? "Press To Reset" : "PRESS WHEN FINISHED"}
+
+        <View>
+          {/* <Text style={styles.timeText}>Hours: Minutes</Text> */}
+          <Text style={styles.time}>
+            {gaugeHours}:{gaugeMinutes}
           </Text>
-        </TouchableOpacity>
-        {/* Button to toggle the reset state */}
-      </View>
-
-      {!Reset && ( // Add this line to conditionally render the TimePicker components START
-        <>
-          {/* TimePicker components for AM and PM times */}
-          <View style={styles.pickerContainer}>
-            {/* TemperaturePicker components for AM temperatures */}
-            <TemperaturePicker
-              label="Am Target "
-              temperature={amTemperature}
-              onValueChange={setAmTemperature}
-            />
-          </View>
-          <TemperaturePicker
-            label="Pm wwwwTarget "
-            temperature={pmTemperature}
-            onValueChange={setPmTemperature}
-            // onValueChange={(value) => setPmTemperature(value)}
-          />
-          <TouchableOpacity
-            style={styles.timeReset}
-            onPress={handleOpenAMDatePicker}
-          >
-            <Text style={styles.dataReset}>Select AM Time</Text>
-            <DatePickerModal
-              isVisible={isAMDatePickerVisible}
-              onClose={handleCloseAMDatePicker}
-              onTimeChange={handleTimeChangeAM}
-            />
-            <Text style={styles.dataText}>AM Time {AMtime}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.timeReset}
-            onPress={handleOpenPMDatePicker}
-          >
-            <Text style={styles.dataReset}>Select PM Time </Text>
-
-            <DatePickerModal
-              isVisible={isPMDatePickerVisible}
-              onClose={handleClosePMDatePicker}
-              onTimeChange={handleTimeChangePM}
-            />
-            <Text style={styles.dataText}>PM Time {PMtime}</Text>
-          </TouchableOpacity>
-        </>
-      )}
-      {/* Add this line to conditionally render the TimePicker components END */}
-
-      {Reset && ( // Add this line to conditionally render the TimePicker components START
-        <>
-          <Text style={styles.temperatureText}>
-            {`Am Target Temperature:     ${
-              amTemperature !== null ? `${amTemperature}°C` : "Not selected"
-            }`}
-          </Text>
-          <Text style={styles.temperatureText}>
-            {`Pm Target Temperature:    ${
-              pmTemperature !== null ? `${pmTemperature}°C` : "Not selected"
-            }`}
-          </Text>
-        </>
-      )}
-
-      <View style={styles.pickerContainer}>
-        {Reset && ( // Add this line to conditionally render the TimePicker components
-          <>
-            <Text style={styles.dataReset}>
-              {AMtime !== null ? `${AMtime} AM` : "Not selected"}
+          <TouchableOpacity style={styles.reset} onPress={handleOnPress}>
+            <Text style={styles.header}>
+              {Reset ? "Press To Reset" : "PRESS WHEN FINISHED"}
             </Text>
+          </TouchableOpacity>
+          {/* Button to toggle the reset state */}
+        </View>
 
-            <Text style={styles.dataReset}>
-              {PMtime !== null ? `${PMtime} PM` : "Not selected"}
+        {!Reset && ( // Add this line to conditionally render the TimePicker components START
+          <>
+            {/* TimePicker components for AM and PM times */}
+            <View style={styles.pickerContainer}>
+              {/* TemperaturePicker components for AM temperatures */}
+              <TemperaturePicker
+                label="Am Target "
+                temperature={amTemperature}
+                onValueChange={setAmTemperature}
+              />
+            </View>
+            <TemperaturePicker
+              label="Pm wwwwTarget "
+              temperature={pmTemperature}
+              onValueChange={setPmTemperature}
+              // onValueChange={(value) => setPmTemperature(value)}
+            />
+            <TouchableOpacity
+              style={styles.timeReset}
+              onPress={handleOpenAMDatePicker}
+            >
+              <Text style={styles.dataReset}>Select AM Time</Text>
+              <DatePickerModal
+                isVisible={isAMDatePickerVisible}
+                onClose={handleCloseAMDatePicker}
+                onTimeChange={handleTimeChangeAM}
+              />
+              <Text style={styles.dataText}>AM Time {AMtime}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.timeReset}
+              onPress={handleOpenPMDatePicker}
+            >
+              <Text style={styles.dataReset}>Select PM Time </Text>
+
+              <DatePickerModal
+                isVisible={isPMDatePickerVisible}
+                onClose={handleClosePMDatePicker}
+                onTimeChange={handleTimeChangePM}
+              />
+              <Text style={styles.dataText}>PM Time {PMtime}</Text>
+            </TouchableOpacity>
+          </>
+        )}
+        {/* Add this line to conditionally render the TimePicker components END */}
+
+        {Reset && ( // Add this line to conditionally render the TimePicker components START
+          <>
+            <Text style={styles.temperatureText}>
+              {`Am Target Temperature:     ${
+                amTemperature !== null ? `${amTemperature}°C` : "Not selected"
+              }`}
+            </Text>
+            <Text style={styles.temperatureText}>
+              {`Pm Target Temperature:    ${
+                pmTemperature !== null ? `${pmTemperature}°C` : "Not selected"
+              }`}
             </Text>
           </>
         )}
-        <StatusBar style="auto" />
-      </View>
-      <View style={styles.connectionStatus}>
-        <Text
-          style={[
-            styles.connectionStatus,
-            { color: isConnected ? "green" : "red" },
-          ]}
-        >
-          {isConnected
-            ? "Connected to MQTT Broker"
-            : "Disconnected from MQTT Broker"}
-        </Text>
-      </View>
-      <TouchableOpacity style={styles.reconnectButton} onPress={reconnect}>
-        <Text style={styles.reconnectText}>Reconnect</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
+
+        <View style={styles.pickerContainer}>
+          {Reset && ( // Add this line to conditionally render the TimePicker components
+            <>
+              <Text style={styles.dataReset}>
+                {AMtime !== null ? `${AMtime} AM` : "Not selected"}
+              </Text>
+
+              <Text style={styles.dataReset}>
+                {PMtime !== null ? `${PMtime} PM` : "Not selected"}
+              </Text>
+            </>
+          )}
+          <StatusBar style="auto" />
+        </View>
+        <View style={styles.connectionStatus}>
+          <Text
+            style={[
+              styles.connectionStatus,
+              { color: isConnected ? "green" : "red" },
+            ]}
+          >
+            {isConnected
+              ? "Connected to MQTT Broker"
+              : "Disconnected from MQTT Broker"}
+          </Text>
+        </View>
+        <TouchableOpacity style={styles.reconnectButton} onPress={reconnect}>
+          <Text style={styles.reconnectText}>Reconnect</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    </ScrollView>
   );
 }
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: "center",
     // marginTop: 50,
     marginBottom: 150,

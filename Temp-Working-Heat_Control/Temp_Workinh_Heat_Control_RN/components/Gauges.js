@@ -2,7 +2,14 @@
 import * as React from "react";
 import Paho from "paho-mqtt";
 import { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  SafeAreaView,
+} from "react-native";
 // import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /************************************
@@ -38,12 +45,14 @@ export function GaugeScreen() {
   const [pmTemperature, setPmTemperature] = useState(0);
   const [gaugeHours, setgaugeHours] = useState(0);
   const [gaugeMinutes, setgaugeMinutes] = useState(0);
+  const [HeaterStatus, setHeaterStatus] = useState("OFF");
+  const [targetTemperature, settargetTemperature] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
   /************************************
    *          State variables         *
    *                end               *
    * **********************************/
-
+console.log("heaterStatus", HeaterStatus);
   /********************************************************************
    *   Effect hook to establish MQTT connection and handle messages   *
    *                          start                                   *
@@ -60,6 +69,7 @@ export function GaugeScreen() {
       client.subscribe("pmTemperature");
       client.subscribe("gaugeHours");
       client.subscribe("gaugeMinutes");
+      client.subscribe("HeaterStatus");
     }
 
     function onFailure() {
@@ -90,7 +100,14 @@ export function GaugeScreen() {
         case "gaugeMinutes":
           setgaugeMinutes(parseInt(message.payloadString));
           break;
-        default:
+          case "HeaterStatus":
+            setHeaterStatus(message.payloadString.trim() === "1" ? "on" : "off");
+            console.log("HeaterStatus", HeaterStatus);
+            break;
+          case "targetTemperature":
+            settargetTemperature(message.payloadString.trim());
+            break;
+          default:
           console.log("Unknown topic:", message.destinationName);
       }
     }
@@ -130,7 +147,9 @@ export function GaugeScreen() {
           client.subscribe("PMtime");
           client.subscribe("gaugeHours");
           client.subscribe("gaugeMinutes");
+          client.subscribe("HeaterStatus");
         },
+
         onFailure: (err) => {
           console.log("Failed to reconnect:", err);
           setIsConnected(false);
@@ -146,58 +165,64 @@ export function GaugeScreen() {
    *******************************************/
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>Gauges</Text>
-      <Text style={styles.timeText}>Hours: Minutes</Text>
-      <Text style={styles.time}>
-        {gaugeHours}:{gaugeMinutes}
-      </Text>
-      <Text style={styles.TargetTempText}>
-        {"Am Traget Temperature = " + amTemperature}{" "}
-      </Text>
-      <Text style={styles.TargetTempText}>
-        {"Pm Target Temperature = " + pmTemperature}{" "}
-      </Text>
-      <View style={styles.tempContainer}>
-        <Text style={styles.tempText}>
-          {"outSide Temperature = " + outSide + "\n"}
+    <ScrollView contentContainerStyle={styles.container}>
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.heading}>Gauges</Text>
+        <Text style={styles.timeHeader}>
+          If time is incorrect, check housing
         </Text>
-        <Text style={styles.tempText}>
-          {"coolSide Temperature = " + coolSide + "\n"}
+        {/* <Text style={styles.timeText}>Hours: Minutes</Text> */}
+        <Text style={styles.time}>
+          {gaugeHours}:{gaugeMinutes}
         </Text>
-        <Text style={styles.tempText}>{"heater Temperature = " + heater}</Text>
-      </View>
-      <View style={styles.connectionStatus}>
-        <Text
-          style={[
-            styles.connectionStatus,
-            { color: isConnected ? "green" : "red" },
-          ]}
-        >
-          {isConnected
-            ? "Connected to MQTT Broker"
-            : "Disconnected from MQTT Broker"}
+        <Text style={styles.TargetTempText}>
+          {"Heater Status = " + HeaterStatus}{" "}
+          {/* console.log("HeaterStatus", HeaterStatus); */}
         </Text>
-      </View>
-      <TouchableOpacity style={styles.reconnectButton} onPress={reconnect}>
-        <Text style={styles.reconnectText}>Reconnect</Text>
-      </TouchableOpacity>
-    </View>
+        <Text style={styles.TargetTempText}>
+          {"Pm Target Temperature = " + pmTemperature}{" "}
+        </Text>
+        <View style={styles.tempContainer}>
+          <Text style={styles.tempText}>
+            {"outSide Temperature = " + outSide + "\n"}
+          </Text>
+          <Text style={styles.tempText}>
+            {"coolSide Temperature = " + coolSide + "\n"}
+          </Text>
+          <Text style={styles.tempText}>
+            {"heater Temperature = " + heater}
+          </Text>
+        </View>
+        <View style={styles.connectionStatus}>
+          <Text
+            style={[
+              styles.connectionStatus,
+              { color: isConnected ? "green" : "red" },
+            ]}
+          >
+            {isConnected
+              ? "Connected to MQTT Broker"
+              : "Disconnected from MQTT Broker"}
+          </Text>
+        </View>
+        <TouchableOpacity style={styles.reconnectButton} onPress={reconnect}>
+          <Text style={styles.reconnectText}>Reconnect</Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     alignItems: "center",
     marginTop: 2,
     paddingTop: 50,
   },
   heading: {
-    fontSize: 20,
+    fontSize: 24,
     color: "red",
-    // padding: 10,
-    // marginleft: 10,
     marginBottom: 15,
     fontStyle: "italic",
     fontFamily: "sans-serif",
@@ -226,14 +251,16 @@ const styles = StyleSheet.create({
     color: "blue",
     padding: 10,
   },
-  heading: {
-    fontSize: 24,
-    color: "red",
-    padding: 30,
-  },
   tempContainer: {
     marginTop: 30,
     marginBottom: 40,
+  },
+  timeHeader: {
+    fontSize: 20,
+    color: "blue",
+    marginBottom: 10,
+    fontStyle: "italic",
+    fontFamily: "sans-serif",
   },
   tempText: {
     fontWeight: "bold",
