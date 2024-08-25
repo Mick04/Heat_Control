@@ -49,6 +49,11 @@ bool AmFlag;
 bool heaterStatus = false;
 // bool Reset = false;  // set when slider is moved
 bool StartUp = 1;
+// Timer-related variables
+unsigned long heaterOnTime = 0;
+const unsigned long heaterTimeout = 3600000;
+//const unsigned long heaterTimeout = 60000; for debuging
+bool heaterOn = false;
 
 /********************************************
       settup the time variables start
@@ -91,10 +96,6 @@ long int value = 0;
 /********************************************
       wifi and pubSup credentials end
  * ******************************************/
-// Timer-related variables
-unsigned long heaterOnTime = 0;
-const unsigned long heaterTimeout = 3600000;
-bool heaterOn = false;
 
 // Function prototypes
 void setup_wifi();
@@ -258,11 +259,6 @@ void callback(char *topic, byte *payload, unsigned int length) {
 
   if (strstr(topic, "PMtime")) {
     sscanf((char *)payload, "%d:%d", &pmHours, &pmMinutes);
-    Serial.print("callBack.  ");
-    Serial.print("pmHours ");
-    Serial.print(pmHours);
-    Serial.print(": pmMinutes");
-    Serial.print(pmMinutes);
   }
   if (amTemp != 0 && pmTemp != 0) {
     StartUp = 0;
@@ -309,51 +305,19 @@ void reconnect() {
 *************************************************************/
 
 void relay_Control() {
-  Serial.print("relay_Control -1-  ");
-  Serial.print("Am = ");
-  Serial.print(Am);
-  Serial.print(". amTemp = ");
-  Serial.println(amTemp);
-  Serial.print(". pmTemp = ");
-  Serial.println(pmTemp);
-  Serial.print(". s3 = ");
-  Serial.println(s3);
-
-  if (AmFlag == true) {
-    if (s3 < amTemp) {
-      digitalWrite(Relay_Pin, HIGH);
-      digitalWrite(LED_Pin, HIGH);  // LED_Pin on
-      heaterStatus = true;
-      if (!heaterOn) {
-        startHeaterTimer();
-      }
-    } else if (s3 > amTemp) {
-      digitalWrite(Relay_Pin, LOW);
-      digitalWrite(LED_Pin, LOW);  // LED_Pin off
-      heaterStatus = false;
-      heaterOn = false;
+  int targetTemp = AmFlag ? amTemp : pmTemp;
+  if (s3 < targetTemp) {
+    digitalWrite(Relay_Pin, HIGH);
+    digitalWrite(LED_Pin, HIGH);  // LED_Pin on
+    heaterStatus = true;
+    if (!heaterOn) {
+      startHeaterTimer();
     }
-  }
-
-  if (AmFlag == false) {
-    Serial.print("relay_Control -2-  ");
-    Serial.print("pmTemp = ");
-    Serial.print(pmTemp);
-    Serial.print(". heaterOn = ");
-    Serial.println(heaterOn);
-    if (s3 < pmTemp) {
-      digitalWrite(Relay_Pin, HIGH);
-      digitalWrite(LED_Pin, LOW);  // builtin LED_Pin on
-      heaterStatus = true;
-      if (!heaterOn) {
-        startHeaterTimer();
-      }
-    } else if (s3 > pmTemp) {
-      digitalWrite(Relay_Pin, LOW);
-      digitalWrite(LED_Pin, LOW);  // LED_Pin off
-      heaterStatus = false;
-      heaterOn = false;
-    }
+  } else if (s3 > targetTemp) {
+    digitalWrite(Relay_Pin, LOW);
+    digitalWrite(LED_Pin, LOW);  // LED_Pin off
+    heaterStatus = false;
+    heaterOn = false;
   }
 }
 /*************************************************************
@@ -396,8 +360,6 @@ void publishTempToMQTT(void) {
 
   const char *heaterStatusStr = heaterStatus ? "true" : "false";
   client.publish("HeaterStatus", heaterStatusStr, true);
-  Serial.print("Heater Status: ");
-  Serial.println(heaterStatusStr);
 }
 
 /********************************************
@@ -508,8 +470,6 @@ void sendSensor() {
       int myTemp = amTemp;
       sprintf(sensVal, "%d", myTemp);
       client.publish("targetTemperature", sensVal, true);
-      Serial.print("Target Temperature: ");
-Serial.println(sensVal);
     }
   } else {
     if (pmHours == Hours && pmMinutes == Minutes) {  // set pmTemp for the Night time setting
@@ -518,24 +478,8 @@ Serial.println(sensVal);
       int myTemp = pmTemp;
       sprintf(sensVal, "%d", myTemp);
       client.publish("targetTemperature", sensVal, true);
-      Serial.print("Target Temperature: ");
-Serial.println(sensVal);
     }
   }
-
-  Serial.print("amHours ");
-  Serial.print(amHours);
-  Serial.print(": amMinutes");
-  Serial.println(amMinutes);
-
-  Serial.print("pmHours ");
-  Serial.print(pmHours);
-  Serial.print(": pmMinutes");
-  Serial.print(pmMinutes);
-  Serial.print(". Hours: ");
-  Serial.print(Hours);
-  Serial.print(": Minutes");
-  Serial.println(Minutes);
 }
 /*************************************************************
                              Heater Control
