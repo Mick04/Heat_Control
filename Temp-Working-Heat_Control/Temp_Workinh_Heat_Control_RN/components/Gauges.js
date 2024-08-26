@@ -153,6 +153,7 @@ export function GaugeScreen() {
           client.subscribe("gaugeHours");
           client.subscribe("gaugeMinutes");
           client.subscribe("HeaterStatus");
+          client.subscribe("targetTemperature");
           console.log("4444444HeaterStatus", HeaterStatus);
         },
 

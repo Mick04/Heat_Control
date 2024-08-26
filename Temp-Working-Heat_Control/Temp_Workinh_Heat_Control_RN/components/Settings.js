@@ -41,6 +41,7 @@ export function SettingsScreen() {
   const [PMtime, setPMTime] = useState("");
   const [gaugeHours, setgaugeHours] = useState(0);
   const [gaugeMinutes, setgaugeMinutes] = useState(0);
+  const [targetTemperature, settargetTemperature] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
 
   const handleOpenAMDatePicker = () => setAMDatePickerVisibility(true);
@@ -94,6 +95,7 @@ export function SettingsScreen() {
       client.subscribe("PMtime");
       client.subscribe("gaugeHours");
       client.subscribe("gaugeMinutes");
+      client.subscribe("targetTemperature");
       clearRetainedMessages(); // Clear retained messages
     }
 
@@ -125,6 +127,10 @@ export function SettingsScreen() {
           break;
         case "gaugeMinutes":
           setgaugeMinutes(parseInt(message.payloadString));
+          break;
+          case "targetTemperature":
+          settargetTemperature(message.payloadString.trim());
+          console.log("5555555555 targetTemperature updated to:", targetTemperature);
           break;
         default:
           console.log(`Unhandled topic: ${message.destinationName}`);
@@ -166,6 +172,7 @@ export function SettingsScreen() {
           client.subscribe("PMtime");
           client.subscribe("gaugeHours");
           client.subscribe("gaugeMinutes");
+          client.subscribe("targetTemperature");
         },
         onFailure: (err) => {
           console.log("Failed to reconnect:", err);
@@ -298,15 +305,15 @@ export function SettingsScreen() {
         {Reset && ( // Add this line to conditionally render the TimePicker components START
           <>
             <Text style={styles.temperatureText}>
-              {`Am Target Temperature:     ${
-                amTemperature !== null ? `${amTemperature}°C` : "Not selected"
+              {`Target Temperature:     ${
+                amTemperature !== null ? `${targetTemperature}°C` : "Not selected"
               }`}
             </Text>
-            <Text style={styles.temperatureText}>
+            {/* <Text style={styles.temperatureText}>
               {`Pm Target Temperature:    ${
                 pmTemperature !== null ? `${pmTemperature}°C` : "Not selected"
               }`}
-            </Text>
+            </Text> */}
           </>
         )}
 

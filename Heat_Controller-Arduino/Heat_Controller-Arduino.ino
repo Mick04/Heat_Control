@@ -51,8 +51,9 @@ bool heaterStatus = false;
 bool StartUp = 1;
 // Timer-related variables
 unsigned long heaterOnTime = 0;
-const unsigned long heaterTimeout = 3600000;
-//const unsigned long heaterTimeout = 60000; for debuging
+//const unsigned long heaterTimeout = 3600000;
+const unsigned long heaterTimeout = 1800000;
+//const unsigned long heaterTimeout = 60000; //for debuging
 bool heaterOn = false;
 
 /********************************************
@@ -478,6 +479,8 @@ void sendSensor() {
       int myTemp = pmTemp;
       sprintf(sensVal, "%d", myTemp);
       client.publish("targetTemperature", sensVal, true);
+      Serial.print("sensVal = ");
+      Serial.println(sensVal);
     }
   }
 }
@@ -500,21 +503,36 @@ void startHeaterTimer() {
  ******************************************/
 
 void checkHeaterTimeout() {
+  Serial.print("millis() - heaterOnTime = ");
+  Serial.println(millis() - heaterOnTime);
+  Serial.println("");
+  Serial.print("heaterTimeout = ");
+  Serial.println(heaterTimeout);
+  Serial.println("");
   if (heaterOn && (millis() - heaterOnTime > heaterTimeout)) {
     if (s3 < amTemp || s3 < pmTemp)  // Check if the temperature is still below the threshold
     {
       client.publish("HeaterStatus", "Temperature did not rise within the expected time.");
+
+      // Prepare the email subject and message
+      String subject = "Heater Alert";
+      String message = "Temperature did not rise within the expected time. The heater has been turned off.";
+
+      // Send the email
+      gmail_send(subject, message);
+      Serial.println("");
+      Serial.print("E-mail sent ");
+      Serial.println("");
     }
+    Serial.println("");
+    Serial.print("heaterOn = ");
+    Serial.println(heaterOn);
+    Serial.println("");
     heaterOn = false;
-    // Publish the status to the MQTT topic
-    client.publish("HeaterStatus", "Temperature did not rise within the expected time.");
-
-    // Prepare the email subject and message
-    String subject = "Heater Alert";
-    String message = "Temperature did not rise within the expected time. The heater has been turned off.";
-
-    // Send the email
-    gmail_send(subject, message);
+    Serial.println("");
+    Serial.print("heaterOn = ");
+    Serial.println(heaterOn);
+    Serial.println("");
   }
 }
 
