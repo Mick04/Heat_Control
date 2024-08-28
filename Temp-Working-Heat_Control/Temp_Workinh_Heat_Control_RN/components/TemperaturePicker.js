@@ -13,7 +13,7 @@ const TemperaturePicker = ({ label, temperature, onValueChange }) => {
   // Render native Picker for Android
   if (Platform.OS === "android") {
     // Check if the platform is Android
-    return ( 
+    return (
       // Return the native Picker component
       <View style={styles.container}>
         {/* <Text style={styles.label}>{label}   nnnnTemperature:</Text> */}
@@ -34,7 +34,6 @@ const TemperaturePicker = ({ label, temperature, onValueChange }) => {
               value="Select a temperature..."
             />
             {temperatureOptions.map((option) => {
-              console.log(`Rendering item: ${option.label}`);
               return (
                 <Picker.Item
                   style={pickerSelectStyles.inputAndroid} // Add the style prop
@@ -67,8 +66,7 @@ const TemperaturePicker = ({ label, temperature, onValueChange }) => {
           }}
           value={temperature}
           // useNativeAndroidPickerStyle={false} // Use custom styles for Android
-        textInputProps={{ style: pickerSelectStyles.inputIOS }}
-
+          textInputProps={{ style: pickerSelectStyles.inputIOS }}
         />
       </View>
     </View>
@@ -116,7 +114,7 @@ const pickerSelectStyles = StyleSheet.create({
     backgroundColor: "yellow",
     // color: "red",
     // borderRadius: 20,
-    
+
     paddingRight: 30, // to ensure the text is never behind the icon
   },
   inputAndroid: {
@@ -129,10 +127,10 @@ const pickerSelectStyles = StyleSheet.create({
     // color: "black",
     // paddingRight: 100, // to ensure the text is never behind the icon
   },
-  placeholder: {
-    fontSize: 4,
-    color: "red",
-  },
+  // placeholder: {
+  //   fontSize: 4,
+  //   color: "blue",
+  // },
 });
 
 export default TemperaturePicker;

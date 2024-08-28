@@ -10,6 +10,8 @@ import {
   ScrollView,
   SafeAreaView,
 } from "react-native";
+import { styles } from "../Styles/styles";
+
 // import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /************************************
@@ -52,7 +54,6 @@ export function GaugeScreen() {
    *          State variables         *
    *                end               *
    * **********************************/
-  console.log("0000000heaterStatus", HeaterStatus);
   /********************************************************************
    *   Effect hook to establish MQTT connection and handle messages   *
    *                          start                                   *
@@ -71,9 +72,7 @@ export function GaugeScreen() {
       client.subscribe("gaugeMinutes");
       client.subscribe("HeaterStatus");
       client.subscribe("targetTemperature");
-      
-      console.log("111111HeaterStatus", HeaterStatus);
-    }
+     }
 
     function onFailure() {
       console.log("Failed to connect!");
@@ -103,14 +102,12 @@ export function GaugeScreen() {
         case "gaugeMinutes":
           setgaugeMinutes(parseInt(message.payloadString));
           break;
-          case "HeaterStatus":
-            const newStatus = message.payloadString.trim() === "true";
-            setHeaterStatus(newStatus);
-            console.log("333333333 HeaterStatus updated to:", newStatus);
-            break;
+        case "HeaterStatus":
+          const newStatus = message.payloadString.trim() === "true";
+          setHeaterStatus(newStatus);
+         break;
         case "targetTemperature":
           settargetTemperature(message.payloadString.trim());
-          console.log("5555555555 targetTemperature updated to:", targetTemperature);
           break;
         default:
           console.log("Unknown topic:", message.destinationName);
@@ -154,7 +151,6 @@ export function GaugeScreen() {
           client.subscribe("gaugeMinutes");
           client.subscribe("HeaterStatus");
           client.subscribe("targetTemperature");
-          console.log("4444444HeaterStatus", HeaterStatus);
         },
 
         onFailure: (err) => {
@@ -178,9 +174,10 @@ export function GaugeScreen() {
         <Text style={styles.timeHeader}>
           If time is incorrect, check housing
         </Text>
+        <View>
         {/* <Text style={styles.timeText}>Hours: Minutes</Text> */}
         <Text style={styles.time}>
-          {gaugeHours}:{gaugeMinutes}
+        {gaugeHours}:{gaugeMinutes.toString().padStart(2, '0')}
         </Text>
         <Text
           style={[
@@ -190,6 +187,7 @@ export function GaugeScreen() {
         >
           {"Heater Status = " + (HeaterStatus ? "on" : "off")}
         </Text>
+        </View>
         <Text style={styles.TargetTempText}>
           {"Target Temperature = " + targetTemperature}{" "}
         </Text>
@@ -224,73 +222,73 @@ export function GaugeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    alignItems: "center",
-    marginTop: 2,
-    paddingTop: 50,
-  },
-  heading: {
-    fontSize: 24,
-    color: "red",
-    marginBottom: 15,
-    fontStyle: "italic",
-    fontFamily: "sans-serif",
-    textDecorationLine: "underline",
-  },
-  timeText: {
-    justifyContent: "space-between",
-    alignItems: "center",
-    // padding: 10,
-    marginBottom: 10,
-    fontSize: 20,
-    marginLeft: 15,
-    color: "blue",
-  },
-  time: {
-    justifyContent: "space-between",
-    alignItems: "center",
-    // padding: 10,
-    marginLeft: 20,
-    marginBottom: 10,
-    fontSize: 20,
-    color: "blue",
-  },
-  TargetTempText: {
-    fontSize: 24,
-    color: "blue",
-    padding: 10,
-  },
-  tempContainer: {
-    marginTop: 30,
-    marginBottom: 40,
-  },
-  timeHeader: {
-    fontSize: 20,
-    color: "blue",
-    marginBottom: 10,
-    fontStyle: "italic",
-    fontFamily: "sans-serif",
-  },
-  tempText: {
-    fontWeight: "bold",
-    color: "#008060",
-    fontSize: 20,
-  },
-  reconnectButton: {
-    backgroundColor: "blue",
-    padding: 10,
-    margin: 10,
-    borderRadius: 5,
-  },
-  reconnectText: {
-    color: "white",
-    fontSize: 20,
-  },
-  connectionStatus: {
-    fontSize: 20,
-    margin: 20,
-  },
-});
+// const styles = StyleSheet.create({
+//   container: {
+//     flexGrow: 1,
+//     alignItems: "center",
+//     marginTop: 2,
+//     paddingTop: 50,
+//   },
+//   heading: {
+//     fontSize: 24,
+//     color: "red",
+//     marginBottom: 15,
+//     fontStyle: "italic",
+//     fontFamily: "sans-serif",
+//     textDecorationLine: "underline",
+//   },
+//   timeText: {
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//     // padding: 10,
+//     marginBottom: 10,
+//     fontSize: 20,
+//     marginLeft: 15,
+//     color: "blue",
+//   },
+//   time: {
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//     // padding: 10,
+//     marginLeft: 20,
+//     marginBottom: 10,
+//     fontSize: 20,
+//     color: "blue",
+//   },
+//   TargetTempText: {
+//     fontSize: 24,
+//     color: "blue",
+//     padding: 10,
+//   },
+//   tempContainer: {
+//     marginTop: 30,
+//     marginBottom: 40,
+//   },
+//   timeHeader: {
+//     fontSize: 20,
+//     color: "blue",
+//     marginBottom: 10,
+//     fontStyle: "italic",
+//     fontFamily: "sans-serif",
+//   },
+//   tempText: {
+//     fontWeight: "bold",
+//     color: "#008060",
+//     fontSize: 20,
+//   },
+//   reconnectButton: {
+//     backgroundColor: "blue",
+//     padding: 10,
+//     margin: 10,
+//     borderRadius: 5,
+//   },
+//   reconnectText: {
+//     color: "white",
+//     fontSize: 20,
+//   },
+//   connectionStatus: {
+//     fontSize: 20,
+//     margin: 20,
+//   },
+// });
 export default GaugeScreen;

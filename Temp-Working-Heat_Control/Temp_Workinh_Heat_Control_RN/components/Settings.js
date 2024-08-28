@@ -14,7 +14,7 @@ import {
 
 import DatePickerModal from "./DatePickerModal"; // Adjust the path as necessary
 import TemperaturePicker from "./TemperaturePicker";
-
+import { styles } from "../Styles/styles";
 /************************************
  *    Creating a new MQTT client    *
  *              start               *
@@ -41,6 +41,7 @@ export function SettingsScreen() {
   const [PMtime, setPMTime] = useState("");
   const [gaugeHours, setgaugeHours] = useState(0);
   const [gaugeMinutes, setgaugeMinutes] = useState(0);
+  const [HeaterStatus, setHeaterStatus] = useState(false);
   const [targetTemperature, settargetTemperature] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
 
@@ -95,6 +96,7 @@ export function SettingsScreen() {
       client.subscribe("PMtime");
       client.subscribe("gaugeHours");
       client.subscribe("gaugeMinutes");
+      client.subscribe("HeaterStatus");
       client.subscribe("targetTemperature");
       clearRetainedMessages(); // Clear retained messages
     }
@@ -128,9 +130,12 @@ export function SettingsScreen() {
         case "gaugeMinutes":
           setgaugeMinutes(parseInt(message.payloadString));
           break;
-          case "targetTemperature":
+        case "HeaterStatus":
+          const newStatus = message.payloadString.trim() === "true";
+          setHeaterStatus(newStatus);
+          break;
+        case "targetTemperature":
           settargetTemperature(message.payloadString.trim());
-          console.log("5555555555 targetTemperature updated to:", targetTemperature);
           break;
         default:
           console.log(`Unhandled topic: ${message.destinationName}`);
@@ -172,6 +177,7 @@ export function SettingsScreen() {
           client.subscribe("PMtime");
           client.subscribe("gaugeHours");
           client.subscribe("gaugeMinutes");
+          client.subscribe("HeaterStatus");
           client.subscribe("targetTemperature");
         },
         onFailure: (err) => {
@@ -239,19 +245,29 @@ export function SettingsScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <SafeAreaView style={styles.container}>
         <Text style={styles.heading}>Settings</Text>
+        <TouchableOpacity style={styles.reset} onPress={handleOnPress}>
+          <Text style={styles.header}>
+            {Reset ? "Press To Reset" : "PRESS WHEN FINISHED"}
+          </Text>
+        </TouchableOpacity>
+
         <Text style={styles.timeHeader}>
           If time is incorrect, check housing
         </Text>
+
         <View>
           {/* <Text style={styles.timeText}>Hours: Minutes</Text> */}
           <Text style={styles.time}>
-            {gaugeHours}:{gaugeMinutes}
+            {gaugeHours}:{gaugeMinutes.toString().padStart(2, "0")}
           </Text>
-          <TouchableOpacity style={styles.reset} onPress={handleOnPress}>
-            <Text style={styles.header}>
-              {Reset ? "Press To Reset" : "PRESS WHEN FINISHED"}
-            </Text>
-          </TouchableOpacity>
+          <Text
+            style={[
+              styles.TargetTempText,
+              { color: HeaterStatus ? "red" : "green" },
+            ]}
+          >
+            {"Heater Status = " + (HeaterStatus ? "on" : "off")}
+          </Text>
           {/* Button to toggle the reset state */}
         </View>
 
@@ -267,7 +283,7 @@ export function SettingsScreen() {
               />
             </View>
             <TemperaturePicker
-              label="Pm wwwwTarget "
+              label="Target "
               temperature={pmTemperature}
               onValueChange={setPmTemperature}
               // onValueChange={(value) => setPmTemperature(value)}
@@ -305,18 +321,17 @@ export function SettingsScreen() {
         {Reset && ( // Add this line to conditionally render the TimePicker components START
           <>
             <Text style={styles.temperatureText}>
-              {`Target Temperature:     ${
-                amTemperature !== null ? `${targetTemperature}°C` : "Not selected"
+              {`AM Target Temperature:     ${
+                amTemperature !== null ? `${amTemperature}°C` : "Not selected"
               }`}
             </Text>
-            {/* <Text style={styles.temperatureText}>
+            <Text style={styles.temperatureText}>
               {`Pm Target Temperature:    ${
                 pmTemperature !== null ? `${pmTemperature}°C` : "Not selected"
               }`}
-            </Text> */}
+            </Text>
           </>
         )}
-
         <View style={styles.pickerContainer}>
           {Reset && ( // Add this line to conditionally render the TimePicker components
             <>
@@ -350,120 +365,117 @@ export function SettingsScreen() {
     </ScrollView>
   );
 }
-const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    alignItems: "center",
-    // marginTop: 50,
-    marginBottom: 150,
-    // justifyContent: "center",
-  },
-  heading: {
-    fontSize: 20,
-    color: "red",
-    // padding: 10,
-    marginleft: 10,
-    // marginBottom: 15,
-    fontStyle: "italic",
-    fontFamily: "sans-serif",
-    textDecorationLine: "underline",
-  },
-  timeText: {
-    justifyContent: "space-between",
-    alignItems: "center",
-    // padding: 10,
-    marginBottom: 10,
-    fontSize: 20,
-    left: 20,
-    color: "green",
-  },
-  timeReset: {
-    justifyContent: "space-between",
-    alignItems: "center",
-    // padding: 10,
-    marginBottom: 10,
-    fontSize: 20,
-    left: 20,
-    color: "green",
-  },
-  time: {
-    justifyContent: "space-between",
-    alignItems: "center",
-    // padding: 10,
-    marginLeft: 70,
-    marginBottom: 10,
-    fontSize: 20,
-    color: "blue",
-  },
+// const styles = StyleSheet.create({
+//   container: {
+//     flexGrow: 1,
+//     alignItems: "center",
+//     marginTop: 2,
+//     paddingTop: 50,
+//   },
+//   heading: {
+//     fontSize: 24,
+//     color: "red",
+//     marginBottom: 15,
+//     fontStyle: "italic",
+//     fontFamily: "sans-serif",
+//     textDecorationLine: "underline",
+//   },
+//   timeText: {
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//     // padding: 10,
+//     marginBottom: 10,
+//     fontSize: 20,
+//     left: 20,
+//     color: "green",
+//   },
+//   timeReset: {
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//     // padding: 10,
+//     marginBottom: 10,
+//     fontSize: 20,
+//     left: 20,
+//     color: "green",
+//   },
+//   time: {
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//     // padding: 10,
+//     marginLeft: 70,
+//     marginBottom: 10,
+//     fontSize: 20,
+//     color: "blue",
+//   },
 
-  header: {
-    fontSize: 20,
-    color: "red",
-    // padding: 10,
-    fontStyle: "italic",
-    fontFamily: "sans-serif",
-    textDecorationLine: "underline",
-  },
-  timeHeader: {
-    fontSize: 20,
-    color: "blue",
-    // padding: 10,
-    fontStyle: "italic",
-    fontFamily: "sans-serif",
-  },
+// header: {
+//   fontSize: 20,
+//   color: "red",
+//   // padding: 10,
+//   fontStyle: "italic",
+//   fontFamily: "sans-serif",
+//   textDecorationLine: "underline",
+// },
+//   timeHeader: {
+//     fontSize: 20,
+//     color: "blue",
+//     // padding: 10,
+//     fontStyle: "italic",
+//     fontFamily: "sans-serif",
+//   },
 
-  dataText: {
-    // backgroundColor: "#fff",
-    color: "blue",
-    margintop: 20,
-    fontSize: 20,
-  },
-  dataReset: {
-    fontSize: 20,
-    // backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
-    // margin: 10,
-    color: "green",
-  },
-  reset: {
-    // justifyContent: "center",
-    alignItems: "center",
-    padding: 10,
-    color: "blue",
-    backgroundColor: "#5ff9",
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: "red",
-    // Add any additional styling you need for the TouchableOpacity here
-  },
-  pickerContainer: {
-    // marginBottom: 10,
-  },
-  temperatureDisplay: {
-    marginTop: 10,
-    alignItems: "center",
-  },
-  temperatureText: {
-    // padding: 20,
-    marginBottom: 10,
-    fontSize: 20,
-    color: "blue",
-  },
-  connectionStatus: {
-    // marginTop: 10,
-    fontSize: 20,
-  },
-  reconnectButton: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: "#007bff",
-    borderRadius: 5,
-  },
-  reconnectText: {
-    color: "#fff",
-    fontSize: 16,
-  },
-});
+//   dataText: {
+//     // backgroundColor: "#fff",
+//     color: "blue",
+//     margintop: 20,
+//     fontSize: 20,
+//   },
+//   dataReset: {
+//     fontSize: 20,
+//     // backgroundColor: "#fff",
+//     justifyContent: "center",
+//     alignItems: "center",
+//     // margin: 10,
+//     color: "green",
+//   },
+//   reset: {
+//     // justifyContent: "center",
+//     alignItems: "center",
+//     padding: 10,
+//     color: "blue",
+//     backgroundColor: "#5ff9",
+//     borderRadius: 25,
+//     borderWidth: 1,
+//     borderColor: "red",
+//     // Add any additional styling you need for the TouchableOpacity here
+//   },
+//   pickerContainer: {
+//     // marginBottom: 10,
+//   },
+//   temperatureDisplay: {
+//     marginTop: 10,
+//     alignItems: "center",
+//   },
+//   temperatureText: {
+//     // padding: 20,
+//     marginBottom: 10,
+//     fontSize: 20,
+//     color: "blue",
+//   },
+//   connectionStatus: {
+//     // marginTop: 10,
+//     fontSize: 20,
+//   },
+//   reconnectButton: {
+//     marginTop: 20,
+//     padding: 10,
+//     backgroundColor: "#007bff",
+//     borderRadius: 5,
+//   },
+//   reconnectText: {
+//     color: "#fff",
+//     fontSize: 16,
+//   },
+// });
 
 export default SettingsScreen;

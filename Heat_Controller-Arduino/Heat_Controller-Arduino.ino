@@ -51,8 +51,8 @@ bool heaterStatus = false;
 bool StartUp = 1;
 // Timer-related variables
 unsigned long heaterOnTime = 0;
-//const unsigned long heaterTimeout = 3600000;
-const unsigned long heaterTimeout = 1800000;
+const unsigned long heaterTimeout = 3600000;
+//const unsigned long heaterTimeout = 1800000;
 //const unsigned long heaterTimeout = 60000; //for debuging
 bool heaterOn = false;
 
