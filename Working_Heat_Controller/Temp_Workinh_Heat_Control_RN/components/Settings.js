@@ -108,9 +108,6 @@ export function SettingsScreen() {
 
     function onMessageReceived(message) {
       const payload = message.payloadString;
-      console.log(
-        `Message received on topic ${message.destinationName} - ${payload}`
-      );
       switch (message.destinationName) {
         case "amTemperature":
           setAmTemperature(payload);
@@ -213,7 +210,7 @@ export function SettingsScreen() {
         amTemperature ? amTemperature.toString() : "0"
       );
       messageAM.destinationName = "amTemperature";
-      messageAM.retained = false; // Set the retain flag
+      messageAM.retained = true; // Set the retain flag
       client.send(messageAM);
 
       const messagePM = new Paho.Message(

@@ -169,7 +169,6 @@ void setup() {
     Serial.println("\nEnd");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
     Serial.printf("Error[%u]: ", error);
@@ -191,7 +190,6 @@ void loop() {
   ArduinoOTA.handle();
   // delay(1000);
   if (!client.connected()) {
-    Serial.println("MQTT client not connected. Attempting to reconnect...");
     reconnect();
   }
 
@@ -217,10 +215,6 @@ void setup_wifi() {
 
   delay(10);
   // We start by connecting to a WiFi network
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
@@ -479,8 +473,6 @@ void sendSensor() {
       int myTemp = pmTemp;
       sprintf(sensVal, "%d", myTemp);
       client.publish("targetTemperature", sensVal, true);
-      Serial.print("sensVal = ");
-      Serial.println(sensVal);
     }
   }
 }
@@ -503,12 +495,6 @@ void startHeaterTimer() {
  ******************************************/
 
 void checkHeaterTimeout() {
-  Serial.print("millis() - heaterOnTime = ");
-  Serial.println(millis() - heaterOnTime);
-  Serial.println("");
-  Serial.print("heaterTimeout = ");
-  Serial.println(heaterTimeout);
-  Serial.println("");
   if (heaterOn && (millis() - heaterOnTime > heaterTimeout)) {
     if (s3 < amTemp || s3 < pmTemp)  // Check if the temperature is still below the threshold
     {
@@ -520,19 +506,8 @@ void checkHeaterTimeout() {
 
       // Send the email
       gmail_send(subject, message);
-      Serial.println("");
-      Serial.print("E-mail sent ");
-      Serial.println("");
     }
-    Serial.println("");
-    Serial.print("heaterOn = ");
-    Serial.println(heaterOn);
-    Serial.println("");
     heaterOn = false;
-    Serial.println("");
-    Serial.print("heaterOn = ");
-    Serial.println(heaterOn);
-    Serial.println("");
   }
 }
 
@@ -601,28 +576,11 @@ void gmail_send(String subject, String message) {
 
 // callback function to get the Email sending status
 void smtpCallback(SMTP_Status status) {
-  // print the current status
-  Serial.println(status.info());
-
-  // print the sending result
   if (status.success()) {
-    Serial.println("----------------");
-    Serial.printf("Message sent success: %d\n", status.completedCount());
-    Serial.printf("Message sent failed: %d\n", status.failedCount());
-    Serial.println("----------------\n");
-
-    for (size_t i = 0; i < smtp.sendingResult.size(); i++) {
+     for (size_t i = 0; i < smtp.sendingResult.size(); i++) {
       // get the result item
       SMTP_Result result = smtp.sendingResult.getItem(i);
-
-      Serial.printf("Message No: %d\n", i + 1);
-      Serial.printf("Status: %s\n", result.completed ? "success" : "failed");
-      Serial.printf("Date/Time: %s\n", MailClient.Time.getDateTimeString(result.timestamp, "%B %d, %Y %H:%M:%S").c_str());
-      Serial.printf("Recipient: %s\n", result.recipients.c_str());
-      Serial.printf("Subject: %s\n", result.subject.c_str());
     }
-    Serial.println("----------------\n");
-
     // free the memory
     smtp.sendingResult.clear();
   }

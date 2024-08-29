@@ -9,7 +9,7 @@ export default function DatePickerModal({ isVisible, onClose, onTimeChange }) {
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
         <Text>Choose a time:</Text>
-          <DatePicker mode="time" selected="time" onTimeChange={onTimeChange}  minuteInterval={15}/> 
+          <DatePicker mode="time" selected="time" onTimeChange={onTimeChange}  minuteInterval={1}/> 
         </View>
       </View>
     </Modal>
