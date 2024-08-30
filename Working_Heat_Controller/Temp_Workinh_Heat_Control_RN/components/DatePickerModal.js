@@ -1,15 +1,20 @@
 // DatePickerModal.js
-import React, { useState } from 'react';
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import DatePicker from 'react-native-modern-datepicker';
+import React, { useState } from "react";
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import DatePicker from "react-native-modern-datepicker";
 
 export default function DatePickerModal({ isVisible, onClose, onTimeChange }) {
   return (
     <Modal animationType="slide" transparent={true} visible={isVisible}>
       <View style={styles.centeredView}>
         <View style={styles.modalView}>
-        <Text>Choose a time:</Text>
-          <DatePicker mode="time" selected="time" onTimeChange={onTimeChange}  minuteInterval={15}/> 
+          <Text>Choose a time:</Text>
+          <DatePicker
+            mode="time"
+            selected="time"
+            onTimeChange={onTimeChange}
+            minuteInterval={15}
+          />
         </View>
       </View>
     </Modal>

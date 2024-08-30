@@ -15,9 +15,9 @@
 
 // Define pins and other constants
 #define Relay_Pin D5  // active board
-#define LED_Pin 13    // on board LED_Pin
-// #define LED_Pin D6//LED_Pin  //change when debuged
-OneWire ds(D7);  // active board  // on pin 10 (a 4.7K resistor is necessary)
+//#define builtInLED_Pin 13    // on board LED_Pin
+#define LED_Pin D6    //LED_Pin  //change when debuged
+OneWire ds(D7);       // active board  // on pin 10 (a 4.7K resistor is necessary)
 
 // Define pins and other constants
 byte i;
@@ -304,6 +304,7 @@ void relay_Control() {
   if (s3 < targetTemp) {
     digitalWrite(Relay_Pin, HIGH);
     digitalWrite(LED_Pin, HIGH);  // LED_Pin on
+    digitalWrite(LED_BUILTIN, LOW);  // LED_Pin on
     heaterStatus = true;
     if (!heaterOn) {
       startHeaterTimer();
@@ -311,6 +312,7 @@ void relay_Control() {
   } else if (s3 > targetTemp) {
     digitalWrite(Relay_Pin, LOW);
     digitalWrite(LED_Pin, LOW);  // LED_Pin off
+    digitalWrite(LED_BUILTIN, HIGH);  // LED_Pin off
     heaterStatus = false;
     heaterOn = false;
   }
@@ -577,7 +579,7 @@ void gmail_send(String subject, String message) {
 // callback function to get the Email sending status
 void smtpCallback(SMTP_Status status) {
   if (status.success()) {
-     for (size_t i = 0; i < smtp.sendingResult.size(); i++) {
+    for (size_t i = 0; i < smtp.sendingResult.size(); i++) {
       // get the result item
       SMTP_Result result = smtp.sendingResult.getItem(i);
     }
