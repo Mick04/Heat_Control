@@ -192,13 +192,13 @@ export function GaugeScreen() {
           {"Target Temperature = " + targetTemperature}{" "}
         </Text>
         <View style={styles.tempContainer}>
-          <Text style={styles.tempText}>
+          <Text style={[styles.tempText,{color: "black"}]}>
             {"outSide Temperature = " + outSide + "\n"}
           </Text>
-          <Text style={styles.tempText}>
+          <Text style={[styles.tempText,{color: "green"}]}>
             {"coolSide Temperature = " + coolSide + "\n"}
           </Text>
-          <Text style={styles.tempText}>
+          <Text style={[styles.tempText,{color: "red"}]}>
             {"heater Temperature = " + heater}
           </Text>
         </View>
