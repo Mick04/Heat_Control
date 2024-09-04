@@ -1,9 +1,13 @@
 // DatePickerModal.js
-import React, { useState } from "react";
-import { Modal, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React from "react";
+import { Modal, StyleSheet, Text, View } from "react-native";
 import DatePicker from "react-native-modern-datepicker";
+import PropTypes from 'prop-types';
 
-export default function DatePickerModal({ isVisible, onClose, onTimeChange }) {
+export default function DatePickerModal({ 
+  isVisible = false,  
+  onTimeChange = () => {} 
+}) {
   return (
     <Modal animationType="slide" transparent={true} visible={isVisible}>
       <View style={styles.centeredView}>
@@ -21,6 +25,10 @@ export default function DatePickerModal({ isVisible, onClose, onTimeChange }) {
   );
 }
 
+DatePickerModal.propTypes = {
+  isVisible: PropTypes.bool,
+  onTimeChange: PropTypes.func,
+};
 const styles = StyleSheet.create({
   centeredView: {
     flex: 1,
