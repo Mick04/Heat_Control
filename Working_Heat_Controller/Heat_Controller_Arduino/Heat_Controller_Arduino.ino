@@ -74,7 +74,7 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
       wifi and pubSup credentials start
  * ******************************************/
 
-const char *ssid = "Gimp";
+const char *ssid = "Gimp_EXT";
 const char *password = "FC7KUNPX";
 const char *mqtt_server = "public.mqtthq.com";
 
