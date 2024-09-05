@@ -13,7 +13,7 @@ export default function DatePickerModal({ isVisible, onClose, onTimeChange }) {
             mode="time"
             selected="time"
             onTimeChange={onTimeChange}
-            minuteInterval={1}
+            minuteInterval={15}
           />
         </View>
       </View>
