@@ -21,8 +21,7 @@ import { styles } from "../Styles/styles";
  * **********************************/
 
 const client = new Paho.Client(
-  "public.mqtthq.com",
-  Number(1883),
+  "wss://c846e85af71b4f65864f7124799cd3bb.s1.eu.hivemq.cloud:8884/mqtt",
   `inTopic-${parseInt(Math.random() * 100)}`
 );
 
@@ -75,10 +74,13 @@ export function SettingsScreen() {
    * ******************************************************************/
 
   useEffect(() => {
+    console.log("useEffect(()" + "isConnected = " + isConnected);
     const clearRetainedMessages = () => {
       const clearMessage = new Paho.Message("");
       clearMessage.retained = true;
-
+      console.log(
+        "clearing retained messages" + "isConnected = " + isConnected
+      );
       ["control"].forEach((topic) => {
         clearMessage.destinationName = topic;
         client.send(clearMessage);
@@ -86,9 +88,9 @@ export function SettingsScreen() {
     };
 
     function onConnect() {
-      console.log("Connected!");
-      con;
       setIsConnected(true);
+      console.log("function onConnect" + " isConnected = " + isConnected);
+      console.log("    Connected!");
       client.subscribe("control");
       client.subscribe("amTemperature");
       client.subscribe("pmTemperature");
@@ -99,15 +101,24 @@ export function SettingsScreen() {
       client.subscribe("HeaterStatus");
       client.subscribe("targetTemperature");
       clearRetainedMessages(); // Clear retained messages
+      console.log("Connected!");
     }
 
-    function onFailure() {
-      console.log("Failed to connect!");
+    function onFailure(error) {
+      console.log("function onFailure" + "isConnected = " + isConnected);
+      console.log("Failed to connect!", error);
       setIsConnected(false);
     }
 
     function onMessageReceived(message) {
-      const payload = message.payloadString;
+      console.log(
+        "Settings function onMessageReceived" +
+          "isConnected = " +
+          isConnected +
+          " HeaterStatus = " +
+          HeaterStatus
+      );
+      // const payload = message.payloadString;
       switch (message.destinationName) {
         case "amTemperature":
           setAmTemperature(payload);
@@ -135,25 +146,44 @@ export function SettingsScreen() {
           settargetTemperature(message.payloadString.trim());
           break;
         default:
-          console.log(`Unhandled topic: ${message.destinationName}`);
+          console.log("Unknown topic:", message.destinationName);
       }
+      console.log("Settings Received message:", message.payloadString);
+      console.log(" targetTemperature = ", targetTemperature);
     }
+    client.connect({
+      onSuccess: onConnect,
+      onFailure: onFailure,
+      userName: "Tortoise",
+      password: "Hea1951Ter",
+      useSSL: true,
+      timeout: 10, // Add a timeout for the connection attempt
+      keepAliveInterval: 20, // Add keep-alive interval
+      cleanSession: true, // Ensure a clean session
+      reconnect: true, // Enable automatic reconnection
+      mqttVersion: 4, // Ensure the correct MQTT version is used
+    });
 
     client.onMessageArrived = onMessageReceived;
-    client.connect({ onSuccess: onConnect, onFailure });
 
     return () => {
       client.disconnect();
     };
-  }, []);
+  }, [isConnected]);
 
   /*************************************************************
    *   Cleanup function to disconnect when component unmounts  *
    *                            end                            *
    * ***********************************************************/
 
+  /*******************************************
+   *      Function to reconnect              *
+   *               start                     *
+   *******************************************/
   const reconnect = () => {
+    console.log("const reconnect " + "isConnected = " + isConnected);
     if (!client.isConnected()) {
+      console.log("!client.isConnected " + "isConnected = " + isConnected);
       console.log("Attempting to reconnect...");
       client.connect({
         onSuccess: () => {
@@ -181,13 +211,23 @@ export function SettingsScreen() {
           console.log("Failed to reconnect:", err);
           setIsConnected(false);
         },
+        userName: "Tortoise",
+        password: "Hea1951Ter",
+        useSSL: true,
+        timeout: 10, // Add a timeout for the connection attempt
+        keepAliveInterval: 20, // Add keep-alive interval
+        cleanSession: true, // Ensure a clean session
+        reconnect: true, // Enable automatic reconnection
+        mqttVersion: 4, // Ensure the correct MQTT version is used
       });
     } else {
       console.log("Already connected.");
+      console.log("Already connected " + "isConnected = " + isConnected);
     }
   };
 
   const publishMessage = () => {
+    console.log("const publishMessage" + "isConnected = " + isConnected);
     console.log("publishing message");
     if (!client.isConnected()) {
       console.log("Client is not connected. Attempting to reconnect...");
@@ -205,6 +245,7 @@ export function SettingsScreen() {
     }
   };
   const sendMessages = () => {
+    console.log("const sendMessages" + "isConnected = " + isConnected);
     try {
       const messageAM = new Paho.Message(
         amTemperature ? amTemperature.toString() : "0"

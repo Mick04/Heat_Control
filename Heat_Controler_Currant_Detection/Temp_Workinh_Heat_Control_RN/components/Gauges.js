@@ -20,11 +20,9 @@ import { styles } from "../Styles/styles";
  * **********************************/
 
 const client = new Paho.Client(
-  "public.mqtthq.com",
-  Number(1883),
+  "wss://c846e85af71b4f65864f7124799cd3bb.s1.eu.hivemq.cloud:8884/mqtt",
   `inTopic-${parseInt(Math.random() * 100)}`
 );
-
 /************************************
  *    Creating a new MQTT client    *
  *                end               *
@@ -72,10 +70,10 @@ export function GaugeScreen() {
       client.subscribe("gaugeMinutes");
       client.subscribe("HeaterStatus");
       client.subscribe("targetTemperature");
-     }
+    }
 
-    function onFailure() {
-      console.log("Failed to connect!");
+    function onFailure(error) {
+      console.log("Failed to connect!", error);
       setIsConnected(false);
     }
 
@@ -90,12 +88,12 @@ export function GaugeScreen() {
         case "heater":
           setControlTemp(parseInt(message.payloadString));
           break;
-        case "amTemperature":
-          setAmTemperature(parseInt(message.payloadString));
-          break;
-        case "pmTemperature":
-          setPmTemperature(parseInt(message.payloadString));
-          break;
+        // case "amTemperature":
+        //   setAmTemperature(parseInt(message.payloadString));
+        //   break;
+        // case "pmTemperature":
+        //   setPmTemperature(parseInt(message.payloadString));
+        //   break;
         case "gaugeHours":
           setgaugeHours(parseInt(message.payloadString));
           break;
@@ -105,19 +103,29 @@ export function GaugeScreen() {
         case "HeaterStatus":
           const newStatus = message.payloadString.trim() === "true";
           setHeaterStatus(newStatus);
-         break;
+          break;
         case "targetTemperature":
           settargetTemperature(message.payloadString.trim());
           break;
         default:
           console.log("Unknown topic:", message.destinationName);
       }
+      console.log("Guages Received message:", message.payloadString);
     }
 
     client.connect({
       onSuccess: onConnect,
       onFailure: onFailure,
+      userName: "Tortoise",
+      password: "Hea1951Ter",
+      useSSL: true,
+      timeout: 10, // Add a timeout for the connection attempt
+      keepAliveInterval: 20, // Add keep-alive interval
+      cleanSession: true, // Ensure a clean session
+      reconnect: true, // Enable automatic reconnection
+      mqttVersion: 4, // Ensure the correct MQTT version is used
     });
+
     client.onMessageArrived = onMessageReceived;
 
     return () => {
@@ -153,10 +161,18 @@ export function GaugeScreen() {
           client.subscribe("targetTemperature");
         },
 
-        onFailure: (err) => {
-          console.log("Failed to reconnect:", err);
+        onFailure: (error) => {
+          console.log("Failed to reconnect:", error);
           setIsConnected(false);
         },
+        userName: "Tortoise",
+        password: "Hea1951Ter",
+        useSSL: true,
+        timeout: 10, // Add a timeout for the connection attempt
+        keepAliveInterval: 20, // Add keep-alive interval
+        cleanSession: true, // Ensure a clean session
+        reconnect: true, // Enable automatic reconnection
+        mqttVersion: 4, // Ensure the correct MQTT version is used
       });
     } else {
       console.log("Already connected.");
@@ -175,30 +191,30 @@ export function GaugeScreen() {
           If time is incorrect, check housing
         </Text>
         <View>
-        {/* <Text style={styles.timeText}>Hours: Minutes</Text> */}
-        <Text style={styles.time}>
-        {gaugeHours}:{gaugeMinutes.toString().padStart(2, '0')}
-        </Text>
-        <Text
-          style={[
-            styles.TargetTempText,
-            { color: HeaterStatus ? "red" : "green" },
-          ]}
-        >
-          {"Heater Status = " + (HeaterStatus ? "on" : "off")}
-        </Text>
+          {/* <Text style={styles.timeText}>Hours: Minutes</Text> */}
+          <Text style={styles.time}>
+            {gaugeHours}:{gaugeMinutes.toString().padStart(2, "0")}
+          </Text>
+          <Text
+            style={[
+              styles.TargetTempText,
+              { color: HeaterStatus ? "red" : "green" },
+            ]}
+          >
+            {"Heater Status = " + (HeaterStatus ? "on" : "off")}
+          </Text>
         </View>
         <Text style={styles.TargetTempText}>
           {"Target Temperature = " + targetTemperature}{" "}
         </Text>
         <View style={styles.tempContainer}>
-          <Text style={[styles.tempText,{color: "black"}]}>
+          <Text style={[styles.tempText, { color: "black" }]}>
             {"outSide Temperature = " + outSide + "\n"}
           </Text>
-          <Text style={[styles.tempText,{color: "green"}]}>
+          <Text style={[styles.tempText, { color: "green" }]}>
             {"coolSide Temperature = " + coolSide + "\n"}
           </Text>
-          <Text style={[styles.tempText,{color: "red"}]}>
+          <Text style={[styles.tempText, { color: "red" }]}>
             {"heater Temperature = " + heater}
           </Text>
         </View>
