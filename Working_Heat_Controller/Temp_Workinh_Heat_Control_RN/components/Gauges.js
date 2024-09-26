@@ -1,12 +1,12 @@
 // Gauges.js
+import { useFocusEffect } from "@react-navigation/native";
 import * as React from "react";
 import Paho from "paho-mqtt";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import {
   View,
   Text,
   TouchableOpacity,
-  StyleSheet,
   ScrollView,
   SafeAreaView,
 } from "react-native";
@@ -14,21 +14,7 @@ import { styles } from "../Styles/styles";
 
 // import AsyncStorage from "@react-native-async-storage/async-storage";
 
-/************************************
- *    Creating a new MQTT client    *
- *              start               *
- * **********************************/
 
-const client = new Paho.Client(
-  "public.mqtthq.com",
-  Number(1883),
-  `inTopic-${parseInt(Math.random() * 100)}`
-);
-
-/************************************
- *    Creating a new MQTT client    *
- *                end               *
- * **********************************/
 
 /************************************
  *          Main component          *
@@ -43,13 +29,15 @@ export function GaugeScreen() {
   const [outSide, setOutSideTemp] = useState(0);
   const [coolSide, setCoolSideTemp] = useState(0);
   const [heater, setControlTemp] = useState(0);
-  const [amTemperature, setAmTemperature] = useState(0);
-  const [pmTemperature, setPmTemperature] = useState(0);
+  const [amTemperature, setAmTemperature] = useState(0); // don't think i need this
+  const [pmTemperature, setPmTemperature] = useState(0); // don't think i need this
   const [gaugeHours, setgaugeHours] = useState(0);
   const [gaugeMinutes, setgaugeMinutes] = useState(0);
   const [HeaterStatus, setHeaterStatus] = useState(false);
   const [targetTemperature, settargetTemperature] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
+
+  const clientRef = useRef(null);
   /************************************
    *          State variables         *
    *                end               *
@@ -60,6 +48,25 @@ export function GaugeScreen() {
    * ******************************************************************/
 
   useEffect(() => {
+    console.log("Component mounted");
+
+    /************************************
+ *    Creating a new MQTT client    *
+ *              start               *
+ * **********************************/
+
+const client = new Paho.Client(
+  "wss://c846e85af71b4f65864f7124799cd3bb.s1.eu.hivemq.cloud:8884/mqtt",
+  `inTopic-${parseInt(Math.random() * 100)}`
+);
+
+/************************************
+ *    Creating a new MQTT client    *
+ *                end               *
+ * **********************************/
+
+    clientRef.current = client;
+    
     function onConnect() {
       console.log("Connected!");
       setIsConnected(true);
@@ -72,7 +79,7 @@ export function GaugeScreen() {
       client.subscribe("gaugeMinutes");
       client.subscribe("HeaterStatus");
       client.subscribe("targetTemperature");
-     }
+    }
 
     function onFailure() {
       console.log("Failed to connect!");
@@ -80,50 +87,76 @@ export function GaugeScreen() {
     }
 
     function onMessageReceived(message) {
+      const payload = message.payloadString;
       switch (message.destinationName) {
         case "outSide":
-          setOutSideTemp(parseInt(message.payloadString));
+          setOutSideTemp(payload);
           break;
         case "coolSide":
-          setCoolSideTemp(parseInt(message.payloadString));
+          setCoolSideTemp(payload);
           break;
         case "heater":
-          setControlTemp(parseInt(message.payloadString));
+          setControlTemp(payload);
           break;
         case "amTemperature":
-          setAmTemperature(parseInt(message.payloadString));
+          setAmTemperature(payload);
           break;
         case "pmTemperature":
-          setPmTemperature(parseInt(message.payloadString));
+          setPmTemperature(payload);
           break;
         case "gaugeHours":
-          setgaugeHours(parseInt(message.payloadString));
+          setgaugeHours(payload);
           break;
         case "gaugeMinutes":
-          setgaugeMinutes(parseInt(message.payloadString));
+          setgaugeMinutes(payload);
           break;
         case "HeaterStatus":
           const newStatus = message.payloadString.trim() === "true";
           setHeaterStatus(newStatus);
-         break;
+          break;
         case "targetTemperature":
-          settargetTemperature(message.payloadString.trim());
+          settargetTemperature(payload.trim());
           break;
         default:
           console.log("Unknown topic:", message.destinationName);
       }
+      console.log("Guages Received message:", message.payloadString);
     }
 
     client.connect({
       onSuccess: onConnect,
       onFailure: onFailure,
+      userName: "Tortoise",
+      password: "Hea1951Ter",
+      useSSL: true,
+      timeout: 10, // Add a timeout for the connection attempt
+      keepAliveInterval: 20, // Add keep-alive interval
+      cleanSession: true, // Ensure a clean session
+      reconnect: true, // Enable automatic reconnection
+      mqttVersion: 4, // Ensure the correct MQTT version is used
     });
     client.onMessageArrived = onMessageReceived;
 
-    return () => {
-      client.disconnect();
+    const disconnectClient = () => {
+      const client = clientRef.current;
+      if (client && client.isConnected()) {
+        console.log("Disconnecting from broker...");
+        client.disconnect();
+        setIsConnected(false);
+      }
     };
-  }, []);
+  
+    useFocusEffect(
+      useCallback(() => {
+        console.log("Guages screen focused");
+        connectClient();
+  
+        return () => {
+          console.log("Guages screen unfocused");
+          disconnectClient();
+        };
+      }, [])
+    );
   /*************************************************************
    *   Cleanup function to disconnect when component unmounts  *
    *                            end                            *
@@ -134,7 +167,8 @@ export function GaugeScreen() {
    *               start                     *
    *******************************************/
   const reconnect = () => {
-    if (!client.isConnected()) {
+    const client = clientRef.current;
+    if (client && !client.isConnected()) {
       console.log("Attempting to reconnect...");
       client.connect({
         onSuccess: () => {
@@ -157,6 +191,14 @@ export function GaugeScreen() {
           console.log("Failed to reconnect:", err);
           setIsConnected(false);
         },
+        userName: "Tortoise",
+        password: "Hea1951Ter",
+        useSSL: true,
+        timeout: 10, // Add a timeout for the connection attempt
+        keepAliveInterval: 20, // Add keep-alive interval
+        cleanSession: true, // Ensure a clean session
+        reconnect: true, // Enable automatic reconnection
+        mqttVersion: 4, // Ensure the correct MQTT version is used
       });
     } else {
       console.log("Already connected.");
@@ -175,30 +217,30 @@ export function GaugeScreen() {
           If time is incorrect, check housing
         </Text>
         <View>
-        {/* <Text style={styles.timeText}>Hours: Minutes</Text> */}
-        <Text style={styles.time}>
-        {gaugeHours}:{gaugeMinutes.toString().padStart(2, '0')}
-        </Text>
-        <Text
-          style={[
-            styles.TargetTempText,
-            { color: HeaterStatus ? "red" : "green" },
-          ]}
-        >
-          {"Heater Status = " + (HeaterStatus ? "on" : "off")}
-        </Text>
+          {/* <Text style={styles.timeText}>Hours: Minutes</Text> */}
+          <Text style={styles.time}>
+            {gaugeHours}:{gaugeMinutes.toString().padStart(2, "0")}
+          </Text>
+          <Text
+            style={[
+              styles.TargetTempText,
+              { color: HeaterStatus ? "red" : "green" },
+            ]}
+          >
+            {"Heater Status = " + (HeaterStatus ? "on" : "off")}
+          </Text>
         </View>
         <Text style={styles.TargetTempText}>
           {"Target Temperature = " + targetTemperature}{" "}
         </Text>
         <View style={styles.tempContainer}>
-          <Text style={[styles.tempText,{color: "black"}]}>
+          <Text style={[styles.tempText, { color: "black" }]}>
             {"outSide Temperature = " + outSide + "\n"}
           </Text>
-          <Text style={[styles.tempText,{color: "green"}]}>
+          <Text style={[styles.tempText, { color: "green" }]}>
             {"coolSide Temperature = " + coolSide + "\n"}
           </Text>
-          <Text style={[styles.tempText,{color: "red"}]}>
+          <Text style={[styles.tempText, { color: "red" }]}>
             {"heater Temperature = " + heater}
           </Text>
         </View>
@@ -221,74 +263,4 @@ export function GaugeScreen() {
     </ScrollView>
   );
 }
-
-// const styles = StyleSheet.create({
-//   container: {
-//     flexGrow: 1,
-//     alignItems: "center",
-//     marginTop: 2,
-//     paddingTop: 50,
-//   },
-//   heading: {
-//     fontSize: 24,
-//     color: "red",
-//     marginBottom: 15,
-//     fontStyle: "italic",
-//     fontFamily: "sans-serif",
-//     textDecorationLine: "underline",
-//   },
-//   timeText: {
-//     justifyContent: "space-between",
-//     alignItems: "center",
-//     // padding: 10,
-//     marginBottom: 10,
-//     fontSize: 20,
-//     marginLeft: 15,
-//     color: "blue",
-//   },
-//   time: {
-//     justifyContent: "space-between",
-//     alignItems: "center",
-//     // padding: 10,
-//     marginLeft: 20,
-//     marginBottom: 10,
-//     fontSize: 20,
-//     color: "blue",
-//   },
-//   TargetTempText: {
-//     fontSize: 24,
-//     color: "blue",
-//     padding: 10,
-//   },
-//   tempContainer: {
-//     marginTop: 30,
-//     marginBottom: 40,
-//   },
-//   timeHeader: {
-//     fontSize: 20,
-//     color: "blue",
-//     marginBottom: 10,
-//     fontStyle: "italic",
-//     fontFamily: "sans-serif",
-//   },
-//   tempText: {
-//     fontWeight: "bold",
-//     color: "#008060",
-//     fontSize: 20,
-//   },
-//   reconnectButton: {
-//     backgroundColor: "blue",
-//     padding: 10,
-//     margin: 10,
-//     borderRadius: 5,
-//   },
-//   reconnectText: {
-//     color: "white",
-//     fontSize: 20,
-//   },
-//   connectionStatus: {
-//     fontSize: 20,
-//     margin: 20,
-//   },
-// });
 export default GaugeScreen;

@@ -1,8 +1,9 @@
 //Setting.js
+import { useFocusEffect } from '@react-navigation/native';
 import { StatusBar } from "expo-status-bar";
 import * as React from "react";
 import Paho from "paho-mqtt";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -21,8 +22,7 @@ import { styles } from "../Styles/styles";
  * **********************************/
 
 const client = new Paho.Client(
-  "public.mqtthq.com",
-  Number(1883),
+  "wss://c846e85af71b4f65864f7124799cd3bb.s1.eu.hivemq.cloud:8884/mqtt",
   `inTopic-${parseInt(Math.random() * 100)}`
 );
 
@@ -75,17 +75,20 @@ export function SettingsScreen() {
    * ******************************************************************/
 
   useEffect(() => {
-    const clearRetainedMessages = () => {
-      const clearMessage = new Paho.Message("");
-      clearMessage.retained = true;
+    console.log("Settings screen mounted");
+    checkConnection(1);
+    // const clearRetainedMessages = () => {
+    //   const clearMessage = new Paho.Message("");
+    //   clearMessage.retained = true;
 
-      ["control"].forEach((topic) => {
-        clearMessage.destinationName = topic;
-        client.send(clearMessage);
-      });
-    };
+    //   ["control"].forEach((topic) => {
+    //     clearMessage.destinationName = topic;
+    //     client.send(clearMessage);
+    //   });
+    // };
 
     function onConnect() {
+      checkConnection(2);
       console.log("Connected!");
       con;
       setIsConnected(true);
@@ -98,15 +101,20 @@ export function SettingsScreen() {
       client.subscribe("gaugeMinutes");
       client.subscribe("HeaterStatus");
       client.subscribe("targetTemperature");
-      clearRetainedMessages(); // Clear retained messages
+      checkConnection(2);
+      // clearRetainedMessages(); // Clear retained messages
+      console.log("gaugeHours = " + gaugeHours);
     }
 
     function onFailure() {
+      checkConnection(3);
       console.log("Failed to connect!");
       setIsConnected(false);
+      checkConnection(3 / 2);
     }
 
     function onMessageReceived(message) {
+      checkConnection(4);
       const payload = message.payloadString;
       switch (message.destinationName) {
         case "amTemperature":
@@ -135,17 +143,40 @@ export function SettingsScreen() {
           settargetTemperature(message.payloadString.trim());
           break;
         default:
-          console.log(`Unhandled topic: ${message.destinationName}`);
+          console.log("Unhandled topic:", message.destinationName);
       }
+      console.log("Settings Received message:", message.payloadString);
     }
 
+    client.connect({
+      onSuccess: onConnect,
+      onFailure: onFailure,
+      userName: "Tortoise",
+      password: "Hea1951Ter",
+      useSSL: true,
+      timeout: 10, // Add a timeout for the connection attempt
+      keepAliveInterval: 20, // Add keep-alive interval
+      cleanSession: true, // Ensure a clean session
+      reconnect: true, // Enable automatic reconnection
+      mqttVersion: 4, // Ensure the correct MQTT version is used
+    });
+
     client.onMessageArrived = onMessageReceived;
-    client.connect({ onSuccess: onConnect, onFailure });
 
     return () => {
+      console.log("Settings screen unmounted");
       client.disconnect();
     };
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log("Settings screen focused");
+      return () => {
+        console.log("Settings screen unfocused");
+      };
+    }, [])
+  );
 
   /*************************************************************
    *   Cleanup function to disconnect when component unmounts  *
@@ -153,6 +184,7 @@ export function SettingsScreen() {
    * ***********************************************************/
 
   const reconnect = () => {
+    checkConnection(6);
     if (!client.isConnected()) {
       console.log("Attempting to reconnect...");
       client.connect({
@@ -178,9 +210,18 @@ export function SettingsScreen() {
           client.subscribe("targetTemperature");
         },
         onFailure: (err) => {
+          checkConnection(7);
           console.log("Failed to reconnect:", err);
           setIsConnected(false);
         },
+        userName: "Tortoise",
+        password: "Hea1951Ter",
+        useSSL: true,
+        timeout: 10, // Add a timeout for the connection attempt
+        keepAliveInterval: 20, // Add keep-alive interval
+        cleanSession: true, // Ensure a clean session
+        reconnect: true, // Enable automatic reconnection
+        mqttVersion: 4, // Ensure the correct MQTT version is used
       });
     } else {
       console.log("Already connected.");
@@ -188,6 +229,7 @@ export function SettingsScreen() {
   };
 
   const publishMessage = () => {
+    checkConnection(8);
     console.log("publishing message");
     if (!client.isConnected()) {
       console.log("Client is not connected. Attempting to reconnect...");
@@ -205,6 +247,7 @@ export function SettingsScreen() {
     }
   };
   const sendMessages = () => {
+    checkConnection(9);
     try {
       const messageAM = new Paho.Message(
         amTemperature ? amTemperature.toString() : "0"
@@ -237,6 +280,17 @@ export function SettingsScreen() {
       console.log("Failed to send messages:", err);
     }
   };
+
+  // Assuming isConnected is a boolean variable indicating the connection status
+
+  function checkConnection(N) {
+    if (isConnected) {
+      console.log("Settings.js is connected to the broker." + N);
+    } else {
+      console.log("Settings.js is not connected to the broker." + N);
+    }
+    return isConnected;
+  }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

@@ -153,7 +153,7 @@ void setup() {
   ************************************/
 
   // ArduinoOTA.setHostname("INSIDE");
-  ArduinoOTA.setHostname("TORTOISE_HOSING");
+  ArduinoOTA.setHostname("inSideTORTOISE_HOSING");
   // ArduinoOTA.setHostname("TEST RIG");
   ArduinoOTA.onStart([]() {
     String type;
