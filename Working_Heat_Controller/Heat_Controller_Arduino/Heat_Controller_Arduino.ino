@@ -1,8 +1,20 @@
-//****** OTA *******
+//****** Heat Controller *******
 
+/****************************
+*     Added from Chat gpt  *
+*            Start         *
+****************************/
+// #include <ESP8266WiFi.h>
+// #include <AsyncMqttClient.h>
+
+/****************************
+*     Added from Chat gpt  *
+*             End          *
+****************************/
 #include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <WiFiManager.h>  // https://github.com/tzapu/WiFiManager
+#include <AsyncMqttClient.h>
 #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
@@ -13,11 +25,16 @@
 #include <OneWire.h>
 #include <ESP_Mail_Client.h>
 
+#define MQTT_USERNAME "Tortoise"
+#define MQTT_PASSWORD "Hea1951Ter"
+
 // Define pins and other constants
 #define Relay_Pin D5  // active board
 //#define builtInLED_Pin 13    // on board LED_Pin
-#define LED_Pin D6    //LED_Pin  //change when debuged
-OneWire ds(D7);       // active board  // on pin 10 (a 4.7K resistor is necessary)
+#define LED_Pin D6  //LED_Pin  //change when debuged
+OneWire ds(D7);     // active board  // on pin 10 (a 4.7K resistor is necessary)
+
+
 
 // Define pins and other constants
 byte i;
@@ -63,9 +80,12 @@ const long utcOffsetInSeconds = 3600;
 
 char daysOfTheWeek[7][12] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
 char sensor[50];
-// Define NTP Client to get time
+
+//Define NTP Client to get time
+
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
+
 /********************************************
       settup the time variables end
  * ******************************************/
@@ -76,7 +96,10 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
 
 const char *ssid = "Gimp_EXT";
 const char *password = "FC7KUNPX";
-const char *mqtt_server = "public.mqtthq.com";
+// const char *mqtt_server = "public.mqtthq.com";
+// Your broker's address
+#define MQTT_HOST "c846e85af71b4f65864f7124799cd3bb.s1.eu.hivemq.cloud:8883"
+#define MQTT_PORT 8883
 
 // the sender email credentials
 #define SENDER_EMAIL "esp8266heaterapp@gmail.com";
@@ -85,14 +108,28 @@ const char *mqtt_server = "public.mqtthq.com";
 #define SMTP_HOST "smtp.gmail.com";
 #define SMTP_PORT 587;
 
+// Global variables
+AsyncMqttClient mqttClient;         // Define mqttClient globally
+String clientId = "ESP8266Client";  // Define the client ID globally
+
+/*******************************
+*. may not nead this snippet.  *
+*            Start             *
+*******************************/
+
 SMTPSession smtp;
 
-WiFiClient Temp_Control;
-PubSubClient client(Temp_Control);
-unsigned long lastMsg = 0;
-#define MSG_BUFFER_SIZE (50)
-char msg[MSG_BUFFER_SIZE];
-long int value = 0;
+// WiFiClient Temp_Control;
+// PubSubClient client(Temp_Control);
+// unsigned long lastMsg = 0;
+// #define MSG_BUFFER_SIZE (50)
+// char msg[MSG_BUFFER_SIZE];
+// long int value = 0;
+
+/*******************************
+*. may not nead this snippet.  *
+*             End              *
+*******************************/
 
 /********************************************
       wifi and pubSup credentials end
@@ -100,9 +137,9 @@ long int value = 0;
 
 // Function prototypes
 void setup_wifi();
-void callback(char *topic, byte *payload, unsigned int length);
+void callback(char *topic, byte *payload, unsigned int length);  //I think lines 131,132,and 133 can come out
 void reconnect();
-void publishTempToMQTT();
+// void publishTempToMQTT();
 void relay_Control();
 void sendSensor();
 void startHeaterTimer();
@@ -133,23 +170,51 @@ void setup() {
   // Serial port for debugging purposes
   Serial.begin(115200);
   delay(1000);
+  /**********************************
+  *    set-up the E-Mail Messages.  *
+  *             Start               *
+  ***********************************/
   String subject = "Email Notification from ESP8266";
-
-
   String textMsg = "This is an email sent from ESP8266.\n";
   textMsg += "Sensor value: ";
   textMsg += "15";  // OR replace this value read from a sensor
-
   gmail_send(subject, textMsg);
+  /**********************************
+  *    set-up the E-Mail Messages.  *
+  *              End                *
+  ***********************************/
+
+
+
   pinMode(Relay_Pin, OUTPUT);
   pinMode(LED_Pin, OUTPUT);      // digitalWrite (LED_Pin, LOW);//LED_Pin off
   pinMode(LED_BUILTIN, OUTPUT);  // Initialize the LED_BUILTIN pin as an output
   setup_wifi();
-  client.setServer(mqtt_server, 1883);
-  client.setCallback(callback);
+  /****************************************
+ *     new MQTT functions from Chat GPT  *
+ *                 Start                 *
+ ****************************************/
+//   mqttClient.onConnect(onMqttConnect);
+//   mqttClient.onDisconnect(onMqttDisconnect);
+//   mqttClient.onMessage(onMqttMessage);
+// mqttClient.setCredentials(MQTT_USERNAME, MQTT_PASSWORD);
+
+//   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
+//   mqttClient.setClientId(String("inTopic-" + String(random(0xffff), HEX)).c_str());
+
+  //mqttClient.setSecure(true);  // If using TLS/SSL
+  mqttClient.connect();
+  Serial.print("Connected");
+  // mqttClient.setServer(mqtt_server, 1883);  //I think this line and the next can come out
+  // mqttClient.setCallback(callback);
+
+  /****************************************
+ *     new MQTT functions from Chat GPT  *
+ *                 eFnd                  *
+ ****************************************/
   /************************************
-          OVER THE AIR START
-  *                                  *
+   *       OVER THE AIR START         *
+  *                                   *
   ************************************/
 
   // ArduinoOTA.setHostname("INSIDE");
@@ -186,16 +251,17 @@ void setup() {
 /************************************
          OVER THE AIR END
  ************************************/
+
 void loop() {
   ArduinoOTA.handle();
   // delay(1000);
-  if (!client.connected()) {
+  if (!mqttClient.connected()) {
     reconnect();
   }
 
-  client.loop();
+  // client.loop();
   sendSensor();
-  publishTempToMQTT();
+  // publishTempToMQTT();
   relay_Control();  // call relay_Control function
   timeClient.update();
   Day = timeClient.getDay();
@@ -206,6 +272,15 @@ void loop() {
   Am = (Hours < 12);
   if (heaterOn) {
     checkHeaterTimeout();
+  }
+  if (Serial.available()) {
+    char input = Serial.read();  // Read the incoming character
+
+    if (input == ' ') {  // Check if the input is a space (' ')
+      Serial.println("Spacebar pressed!");
+      mqttClient.publish("your/topic", 1, true, "Your message here");
+      // Add your logic here (e.g., turn on an LED, send data, etc.)
+    }
   }
 }
 /********************************************
@@ -228,72 +303,87 @@ void setup_wifi() {
  * ******************************************/
 
 /********************************************
-                Callback start
+ *           old Callback start             *
  * ******************************************/
-void callback(char *topic, byte *payload, unsigned int length) {
+// void callback(char *topic, byte *payload, unsigned int length) {
 
-  // Null-terminate the payload to treat it as a string
-  payload[length] = '\0';
+//   // Null-terminate the payload to treat it as a string
+//   payload[length] = '\0';
 
-  if (strstr(topic, "amTemperature")) {
-    sscanf((char *)payload, "%d", &amTemperature);
-    if (StartUp == 1) {
-      amTemp = amTemperature;
-    }
-  }
-  if (strstr(topic, "pmTemperature")) {
-    sscanf((char *)payload, "%d", &pmTemperature);
-    if (StartUp == 1) {
-      pmTemp = pmTemperature;
-    }
-  }
+//   if (strstr(topic, "amTemperature")) {
+//     sscanf((char *)payload, "%d", &amTemperature);
+//     if (StartUp == 1) {
+//       amTemp = amTemperature;
+//     }
+//   }
+//   if (strstr(topic, "pmTemperature")) {
+//     sscanf((char *)payload, "%d", &pmTemperature);
+//     if (StartUp == 1) {
+//       pmTemp = pmTemperature;
+//     }
+//   }
 
-  if (strstr(topic, "AMtime")) {
-    sscanf((char *)payload, "%d:%d", &amHours, &amMinutes);
-  }
+//   if (strstr(topic, "AMtime")) {
+//     sscanf((char *)payload, "%d:%d", &amHours, &amMinutes);
+//   }
 
-  if (strstr(topic, "PMtime")) {
-    sscanf((char *)payload, "%d:%d", &pmHours, &pmMinutes);
-  }
-  if (amTemp != 0 && pmTemp != 0) {
-    StartUp = 0;
-  }
-}
+//   if (strstr(topic, "PMtime")) {
+//     sscanf((char *)payload, "%d:%d", &pmHours, &pmMinutes);
+//   }
+//   if (amTemp != 0 && pmTemp != 0) {
+//     StartUp = 0;
+//   }
+// }
 /********************************************
-                Callback end
-* ******************************************/
+*             old Callback end              *
+********************************************/
 
-
+//********************************************
+//  *           old reconnect start             *
+//  * ******************************************/
 void reconnect() {
-  // Loop until we're reconnected
-  while (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
-    // Create a random client ID
+   mqttClient.onConnect(onMqttConnect);
+  mqttClient.onDisconnect(onMqttDisconnect);
+  mqttClient.onMessage(onMqttMessage);
+mqttClient.setCredentials(MQTT_USERNAME, MQTT_PASSWORD);
+
+  mqttClient.setServer(MQTT_HOST, MQTT_PORT);
+  mqttClient.setClientId(String("inTopic-" + String(random(0xffff), HEX)).c_str());
+  if (!mqttClient.connected()) {
+    // Set the client ID before connecting
     String clientId = "ESP8266Client";
-    clientId += String(random(0xffff), HEX);
-    // Attempt to connect
-    if (client.connect(clientId.c_str())) {
-      // if (client.connect("ESP8266Client")) {
+    mqttClient.setClientId(clientId.c_str());
+
+    // Connect to the MQTT broker without passing any arguments
+    mqttClient.connect();
+
+    // Subscribe to the topic after connection is established
+    if (mqttClient.connected()) {
       Serial.println("connected");
-      // // Once connected,
+      // Once connected,
       // ... subscribe to topics
-      client.subscribe("Temp_Control/sub");
-      client.subscribe("control");
-      client.subscribe("amTemperature");
-      client.subscribe("pmTemperature");
-      client.subscribe("AMtime");
-      client.subscribe("PMtime");
-      client.subscribe("HeaterStatus");
+      mqttClient.subscribe("Tortoise", 0);
+      mqttClient.subscribe("control", 0);
+      mqttClient.subscribe("amTemperature", 0);
+      mqttClient.subscribe("pmTemperature", 0);
+      mqttClient.subscribe("AMtime", 0);
+      mqttClient.subscribe("PMtime", 0);
+      mqttClient.subscribe("HeaterStatus", 0);
+      Serial.println("Subscribed to Tortoise");
+      Serial.print(mqttClient.connected() ? "Connected" : "If Disconnected");
 
     } else {
       Serial.print("failed, reconnect = ");
-      Serial.print(client.state());
+      Serial.print(mqttClient.connected() ? "Connected" : "Else Disconnected");
       Serial.println(" try again in 5 seconds");
       // Wait 5 seconds before retrying
       delay(5000);
     }
   }
 }
+/********************************************
+ *           old reconnect End              *
+ * ******************************************/
 /*************************************************************
                             Relay Control
                                  start
@@ -303,7 +393,7 @@ void relay_Control() {
   int targetTemp = AmFlag ? amTemp : pmTemp;
   if (s3 < targetTemp) {
     digitalWrite(Relay_Pin, HIGH);
-    digitalWrite(LED_Pin, HIGH);  // LED_Pin on
+    digitalWrite(LED_Pin, HIGH);     // LED_Pin on
     digitalWrite(LED_BUILTIN, LOW);  // LED_Pin on
     heaterStatus = true;
     if (!heaterOn) {
@@ -311,7 +401,7 @@ void relay_Control() {
     }
   } else if (s3 > targetTemp) {
     digitalWrite(Relay_Pin, LOW);
-    digitalWrite(LED_Pin, LOW);  // LED_Pin off
+    digitalWrite(LED_Pin, LOW);       // LED_Pin off
     digitalWrite(LED_BUILTIN, HIGH);  // LED_Pin off
     heaterStatus = false;
     heaterOn = false;
@@ -323,48 +413,51 @@ void relay_Control() {
 *************************************************************/
 
 /********************************************
-         send temperature value
-             to server for
-          temperature monitor
-                to receive
-                  start
+*                  OLD                      *
+ *        send temperature value            *
+ *            to server for                 *
+ *         temperature monitor              *
+ *               to receive                 *
+ *                 start                    *
 * ******************************************/
-void publishTempToMQTT(void) {
-  if (!client.connected()) {
-    // Reconnect to MQTT broker if necessary
-    reconnect();
-  }
-  char sensVal[50];
-  float myFloat1 = s1;
-  sprintf(sensVal, "%f", myFloat1);
-  client.publish("outSide", sensVal, true);
 
-  float myFloat2 = s2;
-  sprintf(sensVal, "%f", myFloat2);
-  client.publish("coolSide", sensVal, true);
+// void publishTempToMQTT(void) {
+//   if (!client.connected()) {
+//     // Reconnect to MQTT broker if necessary
+//     reconnect();
+//   }
+//   char sensVal[50];
+//   float myFloat1 = s1;
+//   sprintf(sensVal, "%f", myFloat1);
+//   client.publish("outSide", sensVal, true);
 
-  float myFloat3 = s3;
-  sprintf(sensVal, "%f", myFloat3);
-  client.publish("heater", sensVal, true);
+//   float myFloat2 = s2;
+//   sprintf(sensVal, "%f", myFloat2);
+//   client.publish("coolSide", sensVal, true);
 
-  int myHours = Hours;
-  sprintf(sensVal, "%d", myHours);
-  client.publish("gaugeHours", sensVal, true);
+//   float myFloat3 = s3;
+//   sprintf(sensVal, "%f", myFloat3);
+//   client.publish("heater", sensVal, true);
 
-  int myMinutes = Minutes;
-  sprintf(sensVal, "%d", myMinutes);
-  client.publish("gaugeMinutes", sensVal, true);
+//   int myHours = Hours;
+//   sprintf(sensVal, "%d", myHours);
+//   client.publish("gaugeHours", sensVal, true);
 
-  const char *heaterStatusStr = heaterStatus ? "true" : "false";
-  client.publish("HeaterStatus", heaterStatusStr, true);
-}
+//   int myMinutes = Minutes;
+//   sprintf(sensVal, "%d", myMinutes);
+//   client.publish("gaugeMinutes", sensVal, true);
+
+//   const char *heaterStatusStr = heaterStatus ? "true" : "false";
+//   client.publish("HeaterStatus", heaterStatusStr, true);
+// }
 
 /********************************************
-         send temperature value
-             to server for
-          temperature monitor
-                to receive
-                   end
+*                  OLD                      *
+*        send temperature value             *
+*           to server for                   *
+*         temperature monitor               *
+*              to receive                   *
+*                end                        *
 * ******************************************/
 
 /*************************************************************
@@ -466,7 +559,7 @@ void sendSensor() {
       amTemp = amTemperature;
       int myTemp = amTemp;
       sprintf(sensVal, "%d", myTemp);
-      client.publish("targetTemperature", sensVal, true);
+      // client.publish("targetTemperature", sensVal, true);
     }
   } else {
     if (pmHours == Hours && pmMinutes == Minutes) {  // set pmTemp for the Night time setting
@@ -474,7 +567,7 @@ void sendSensor() {
       pmTemp = pmTemperature;
       int myTemp = pmTemp;
       sprintf(sensVal, "%d", myTemp);
-      client.publish("targetTemperature", sensVal, true);
+      // client.publish("targetTemperature", sensVal, true);
     }
   }
 }
@@ -500,7 +593,7 @@ void checkHeaterTimeout() {
   if (heaterOn && (millis() - heaterOnTime > heaterTimeout)) {
     if (s3 < amTemp || s3 < pmTemp)  // Check if the temperature is still below the threshold
     {
-      client.publish("HeaterStatus", "Temperature did not rise within the expected time.");
+      //  client.publish("HeaterStatus", "Temperature did not rise within the expected time.");
 
       // Prepare the email subject and message
       String subject = "Heater Alert";
@@ -513,9 +606,55 @@ void checkHeaterTimeout() {
   }
 }
 
-/********************************************
-                Check Heater Timeout end
+/*******************************************
+ *               Check Heater Timeout end. *
  ******************************************/
+
+/*******************************************
+*        Define The Callback Function's.   *
+*                from chatGPT              *
+*                   Start                  *
+*******************************************/
+
+void onMqttConnect(bool sessionPresent) {
+  Serial.println("Connected to MQTT.");
+  mqttClient.subscribe("your/topic", 0);  // Subscribe to your topic
+}
+
+void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
+  Serial.println("Disconnected from MQTT.");
+}
+
+void onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total) {
+  // Handle the message
+  Serial.print("Message arrived on topic: ");
+  Serial.print(topic);
+  Serial.print(". Message: ");
+  for (int i = 0; i < len; i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
+}
+
+/*******************************************
+*        Define The Callback Function's.   *
+*                from chatGPT              *
+*                    End                   *
+*******************************************/
+
+/*******************************************
+*         Publish Message's                *
+*              Start                       *
+*******************************************/
+
+void publishMessage() {
+  mqttClient.publish("your/topic", 1, true, "Your message here");
+}
+
+/*******************************************
+*         Publish Message's                *
+*              Start                       *
+*******************************************/
 
 /********************************************
                 Email send start

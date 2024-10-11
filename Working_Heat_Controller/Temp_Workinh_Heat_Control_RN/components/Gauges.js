@@ -14,8 +14,6 @@ import { styles } from "../Styles/styles";
 
 // import AsyncStorage from "@react-native-async-storage/async-storage";
 
-
-
 /************************************
  *          Main component          *
  *              start               *
@@ -42,33 +40,34 @@ export function GaugeScreen() {
    *          State variables         *
    *                end               *
    * **********************************/
+
   /********************************************************************
    *   Effect hook to establish MQTT connection and handle messages   *
    *                          start                                   *
    * ******************************************************************/
 
   useEffect(() => {
-    console.log("Component mounted");
+    console.log("Guags Screen Component mounted");
 
     /************************************
- *    Creating a new MQTT client    *
- *              start               *
- * **********************************/
+     *    Creating a new MQTT client    *
+     *              start               *
+     * **********************************/
+    
+    const client = new Paho.Client(
+      "wss://c846e85af71b4f65864f7124799cd3bb.s1.eu.hivemq.cloud:8884/mqtt",
+      `inTopic-${parseInt(Math.random() * 100)}`
+    );
 
-const client = new Paho.Client(
-  "wss://c846e85af71b4f65864f7124799cd3bb.s1.eu.hivemq.cloud:8884/mqtt",
-  `inTopic-${parseInt(Math.random() * 100)}`
-);
-
-/************************************
- *    Creating a new MQTT client    *
- *                end               *
- * **********************************/
+    /************************************
+     *    Creating a new MQTT client    *
+     *                end               *
+     * **********************************/
 
     clientRef.current = client;
-    
+
     function onConnect() {
-      console.log("Connected!");
+      console.log("Guags Screen Connected!");
       setIsConnected(true);
       client.subscribe("outSide");
       client.subscribe("coolSide");
@@ -82,7 +81,7 @@ const client = new Paho.Client(
     }
 
     function onFailure() {
-      console.log("Failed to connect!");
+      console.log("Guags Screen Failed to connect!");
       setIsConnected(false);
     }
 
@@ -137,30 +136,65 @@ const client = new Paho.Client(
     });
     client.onMessageArrived = onMessageReceived;
 
-    const disconnectClient = () => {
+    return () => {
       const client = clientRef.current;
       if (client && client.isConnected()) {
-        console.log("Disconnecting from broker...");
+        console.log("Gauges Screen Disconnecting from broker...");
         client.disconnect();
         setIsConnected(false);
       }
     };
-  
-    useFocusEffect(
-      useCallback(() => {
-        console.log("Guages screen focused");
-        connectClient();
-  
-        return () => {
-          console.log("Guages screen unfocused");
-          disconnectClient();
-        };
-      }, [])
-    );
+  }, []);
+
   /*************************************************************
    *   Cleanup function to disconnect when component unmounts  *
    *                            end                            *
    * ***********************************************************/
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log("Guages screen focused");
+      const client = clientRef.current;
+      if (client && !client.isConnected()) {
+        client.connect({
+          onSuccess: () => {
+            console.log("Guags Screen Reconnected successfully.");
+            setIsConnected(true);
+            client.subscribe("outSide");
+            client.subscribe("coolSide");
+            client.subscribe("heater");
+            client.subscribe("amTemperature");
+            client.subscribe("pmTemperature");
+            client.subscribe("gaugeHours");
+            client.subscribe("gaugeMinutes");
+            client.subscribe("HeaterStatus");
+            client.subscribe("targetTemperature");
+          },
+          onFailure: (err) => {
+            console.log("Failed to reconnect:", err);
+            setIsConnected(false);
+          },
+          userName: "Tortoise",
+          password: "Hea1951Ter",
+          useSSL: true,
+          timeout: 10, // Add a timeout for the connection attempt
+          keepAliveInterval: 20, // Add keep-alive interval
+          cleanSession: true, // Ensure a clean session
+          reconnect: true, // Enable automatic reconnection
+          mqttVersion: 4, // Ensure the correct MQTT version is used
+        });
+      }
+
+      return () => {
+        const client = clientRef.current;
+        if (client && client.isConnected()) {
+          console.log("Guags Screen Disconnecting from broker...");
+          client.disconnect();
+          setIsConnected(false);
+        }
+      };
+    }, [])
+  );
 
   /*******************************************
    *      Function to reconnect              *
@@ -169,24 +203,21 @@ const client = new Paho.Client(
   const reconnect = () => {
     const client = clientRef.current;
     if (client && !client.isConnected()) {
-      console.log("Attempting to reconnect...");
+      console.log("Guags Screen Attempting to reconnect...");
       client.connect({
         onSuccess: () => {
-          console.log("Reconnected successfully.");
+          console.log("Guages Screen Reconnected successfully.");
           setIsConnected(true);
           client.subscribe("outSide");
           client.subscribe("coolSide");
           client.subscribe("heater");
           client.subscribe("amTemperature");
           client.subscribe("pmTemperature");
-          client.subscribe("AMtime");
-          client.subscribe("PMtime");
           client.subscribe("gaugeHours");
           client.subscribe("gaugeMinutes");
           client.subscribe("HeaterStatus");
           client.subscribe("targetTemperature");
         },
-
         onFailure: (err) => {
           console.log("Failed to reconnect:", err);
           setIsConnected(false);
@@ -201,7 +232,7 @@ const client = new Paho.Client(
         mqttVersion: 4, // Ensure the correct MQTT version is used
       });
     } else {
-      console.log("Already connected.");
+      console.log("Guages Screen Already connected.");
     }
   };
   /*******************************************
@@ -263,4 +294,5 @@ const client = new Paho.Client(
     </ScrollView>
   );
 }
+
 export default GaugeScreen;

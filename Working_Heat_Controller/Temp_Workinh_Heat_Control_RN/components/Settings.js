@@ -3,11 +3,10 @@ import { useFocusEffect } from '@react-navigation/native';
 import { StatusBar } from "expo-status-bar";
 import * as React from "react";
 import Paho from "paho-mqtt";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback,useRef } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   SafeAreaView,
   TouchableOpacity,
   ScrollView,
@@ -16,22 +15,12 @@ import {
 import DatePickerModal from "./DatePickerModal"; // Adjust the path as necessary
 import TemperaturePicker from "./TemperaturePicker";
 import { styles } from "../Styles/styles";
-/************************************
- *    Creating a new MQTT client    *
- *              start               *
- * **********************************/
-
-const client = new Paho.Client(
-  "wss://c846e85af71b4f65864f7124799cd3bb.s1.eu.hivemq.cloud:8884/mqtt",
-  `inTopic-${parseInt(Math.random() * 100)}`
-);
-
-/************************************
- *    Creating a new MQTT client    *
- *                end               *
- * **********************************/
 
 export function SettingsScreen() {
+  /************************************
+   *          State variables         *
+   *              start               *
+   * **********************************/
   const [Reset, setReset] = useState(true);
   const [amTemperature, setAmTemperature] = useState(null);
   const [pmTemperature, setPmTemperature] = useState(null);
@@ -68,6 +57,11 @@ export function SettingsScreen() {
       publishMessage(); // Invoke the function here
     }
   };
+  const clientRef = useRef(null);
+  /************************************
+   *          State variables         *
+   *                end               *
+   * **********************************/
 
   /********************************************************************
    *   Effect hook to establish MQTT connection and handle messages   *
@@ -76,20 +70,30 @@ export function SettingsScreen() {
 
   useEffect(() => {
     console.log("Settings screen mounted");
+    
+    
     checkConnection(1);
-    // const clearRetainedMessages = () => {
-    //   const clearMessage = new Paho.Message("");
-    //   clearMessage.retained = true;
+   
+    /************************************
+ *    Creating a new MQTT client    *
+ *              start               *
+ * **********************************/
 
-    //   ["control"].forEach((topic) => {
-    //     clearMessage.destinationName = topic;
-    //     client.send(clearMessage);
-    //   });
-    // };
+const client = new Paho.Client(
+  "wss://c846e85af71b4f65864f7124799cd3bb.s1.eu.hivemq.cloud:8884/mqtt",
+  `inTopic-${parseInt(Math.random() * 100)}`
+);
+
+/************************************
+ *    Creating a new MQTT client    *
+ *                end               *
+ * **********************************/
+
+clientRef.current = client;
 
     function onConnect() {
       checkConnection(2);
-      console.log("Connected!");
+      console.log("Settings Screen Connected!");
       con;
       setIsConnected(true);
       client.subscribe("control");
@@ -108,7 +112,7 @@ export function SettingsScreen() {
 
     function onFailure() {
       checkConnection(3);
-      console.log("Failed to connect!");
+      console.log("Settings Screen Failed to connect!");
       setIsConnected(false);
       checkConnection(3 / 2);
     }
@@ -164,16 +168,57 @@ export function SettingsScreen() {
     client.onMessageArrived = onMessageReceived;
 
     return () => {
-      console.log("Settings screen unmounted");
-      client.disconnect();
+      const client = clientRef.current;
+      if (client && client.isConnected()) {
+        console.log("Settings screen Disconnecting from broker...");
+        client.disconnect();
+        setIsConnected(false);
+      }
     };
   }, []);
 
   useFocusEffect(
     useCallback(() => {
       console.log("Settings screen focused");
+      const client = clientRef.current;
+      if (client && !client.isConnected()) {
+        client.connect({
+          onSuccess: () => {
+            console.log("Reconnected successfully.");
+            setIsConnected(true);
+           // Optionally, subscribe to the topics again
+          client.subscribe("control");
+          client.subscribe("amTemperature");
+          client.subscribe("pmTemperature");
+          client.subscribe("AMtime");
+          client.subscribe("PMtime");
+          client.subscribe("gaugeHours");
+          client.subscribe("gaugeMinutes");
+          client.subscribe("HeaterStatus");
+          client.subscribe("targetTemperature");
+          },
+          onFailure: (err) => {
+            console.log("Settings Screen Failed to reconnect:", err);
+            setIsConnected(false);
+          },
+          userName: "Tortoise",
+          password: "Hea1951Ter",
+          useSSL: true,
+          timeout: 10, // Add a timeout for the connection attempt
+          keepAliveInterval: 20, // Add keep-alive interval
+          cleanSession: true, // Ensure a clean session
+          reconnect: true, // Enable automatic reconnection
+          mqttVersion: 4, // Ensure the correct MQTT version is used
+        });
+      }
+
       return () => {
-        console.log("Settings screen unfocused");
+        const client = clientRef.current;
+        if (client && client.isConnected()) {
+          console.log("Disconnecting from broker...");
+          client.disconnect();
+          setIsConnected(false);
+        }
       };
     }, [])
   );
@@ -185,19 +230,13 @@ export function SettingsScreen() {
 
   const reconnect = () => {
     checkConnection(6);
-    if (!client.isConnected()) {
+    const client = clientRef.current;
+    if (client && !client.isConnected()) {
       console.log("Attempting to reconnect...");
       client.connect({
         onSuccess: () => {
-          console.log("Reconnected successfully.");
+          console.log("Settings Screen Reconnected successfully.");
           setIsConnected(true);
-
-          // Clear previous data
-          setAmTemperature(null);
-          setPmTemperature(null);
-          setAMTime("");
-          setPMTime("");
-
           // Optionally, subscribe to the topics again
           client.subscribe("control");
           client.subscribe("amTemperature");
@@ -211,7 +250,7 @@ export function SettingsScreen() {
         },
         onFailure: (err) => {
           checkConnection(7);
-          console.log("Failed to reconnect:", err);
+          console.log("Settigs Screen Failed to reconnect:", err);
           setIsConnected(false);
         },
         userName: "Tortoise",
@@ -224,22 +263,23 @@ export function SettingsScreen() {
         mqttVersion: 4, // Ensure the correct MQTT version is used
       });
     } else {
-      console.log("Already connected.");
+      console.log("Settings Screen Already connected.");
     }
   };
 
   const publishMessage = () => {
     checkConnection(8);
     console.log("publishing message");
+    const client = clientRef.current;
     if (!client.isConnected()) {
       console.log("Client is not connected. Attempting to reconnect...");
       client.connect({
         onSuccess: () => {
-          console.log("Reconnected successfully.");
+          console.log("Settings Screen Reconnected successfully.");
           sendMessages();
         },
         onFailure: (err) => {
-          console.log("Failed to reconnect:", err);
+          console.log("Settings Screen Failed to reconnect:", err);
         },
       });
     } else {
@@ -248,6 +288,7 @@ export function SettingsScreen() {
   };
   const sendMessages = () => {
     checkConnection(9);
+    const client = clientRef.current;
     try {
       const messageAM = new Paho.Message(
         amTemperature ? amTemperature.toString() : "0"
@@ -416,117 +457,4 @@ export function SettingsScreen() {
     </ScrollView>
   );
 }
-// const styles = StyleSheet.create({
-//   container: {
-//     flexGrow: 1,
-//     alignItems: "center",
-//     marginTop: 2,
-//     paddingTop: 50,
-//   },
-//   heading: {
-//     fontSize: 24,
-//     color: "red",
-//     marginBottom: 15,
-//     fontStyle: "italic",
-//     fontFamily: "sans-serif",
-//     textDecorationLine: "underline",
-//   },
-//   timeText: {
-//     justifyContent: "space-between",
-//     alignItems: "center",
-//     // padding: 10,
-//     marginBottom: 10,
-//     fontSize: 20,
-//     left: 20,
-//     color: "green",
-//   },
-//   timeReset: {
-//     justifyContent: "space-between",
-//     alignItems: "center",
-//     // padding: 10,
-//     marginBottom: 10,
-//     fontSize: 20,
-//     left: 20,
-//     color: "green",
-//   },
-//   time: {
-//     justifyContent: "space-between",
-//     alignItems: "center",
-//     // padding: 10,
-//     marginLeft: 70,
-//     marginBottom: 10,
-//     fontSize: 20,
-//     color: "blue",
-//   },
-
-// header: {
-//   fontSize: 20,
-//   color: "red",
-//   // padding: 10,
-//   fontStyle: "italic",
-//   fontFamily: "sans-serif",
-//   textDecorationLine: "underline",
-// },
-//   timeHeader: {
-//     fontSize: 20,
-//     color: "blue",
-//     // padding: 10,
-//     fontStyle: "italic",
-//     fontFamily: "sans-serif",
-//   },
-
-//   dataText: {
-//     // backgroundColor: "#fff",
-//     color: "blue",
-//     margintop: 20,
-//     fontSize: 20,
-//   },
-//   dataReset: {
-//     fontSize: 20,
-//     // backgroundColor: "#fff",
-//     justifyContent: "center",
-//     alignItems: "center",
-//     // margin: 10,
-//     color: "green",
-//   },
-//   reset: {
-//     // justifyContent: "center",
-//     alignItems: "center",
-//     padding: 10,
-//     color: "blue",
-//     backgroundColor: "#5ff9",
-//     borderRadius: 25,
-//     borderWidth: 1,
-//     borderColor: "red",
-//     // Add any additional styling you need for the TouchableOpacity here
-//   },
-//   pickerContainer: {
-//     // marginBottom: 10,
-//   },
-//   temperatureDisplay: {
-//     marginTop: 10,
-//     alignItems: "center",
-//   },
-//   temperatureText: {
-//     // padding: 20,
-//     marginBottom: 10,
-//     fontSize: 20,
-//     color: "blue",
-//   },
-//   connectionStatus: {
-//     // marginTop: 10,
-//     fontSize: 20,
-//   },
-//   reconnectButton: {
-//     marginTop: 20,
-//     padding: 10,
-//     backgroundColor: "#007bff",
-//     borderRadius: 5,
-//   },
-//   reconnectText: {
-//     color: "#fff",
-//     fontSize: 16,
-//   },
-// });
-
 export default SettingsScreen;
