@@ -3,12 +3,12 @@ import * as React from "react";
 import Paho from "paho-mqtt";
 import { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-// import AsyncStorage from "@react-native-async-storage/async-storage";
-<<<<<<< HEAD
+// import AsyncStorage from "@react-native-async-storage/async-storage"
 
-=======
 import { useMQTT, reconnect } from "./MQTTService";
->>>>>>> 09bc2c5 (out of step)
+
+import { useMQTT, reconnect } from "./MQTTService";
+
 /************************************
  *    Creating a new MQTT client    *
  *              start               *
@@ -66,8 +66,6 @@ export function GaugeScreen() {
    *   Effect hook to establish MQTT connection and handle messages   *
    *                          start                                   *
    * ******************************************************************/
-
-<<<<<<< HEAD
   useEffect(() => {
     console.log("Connected! 2 ");
     function onConnect() {
@@ -122,22 +120,7 @@ export function GaugeScreen() {
     });
     console.log("************coolSide£££££££££££££ =", coolSide);
     client.onMessageArrived = onMessageReceived;
-=======
-  // useEffect(() => {
-  // function onConnect() {
-  //   console.log("Connected!");
-  //   setIsConnected(true);
-  //   client.subscribe("outSide");
-  //   client.subscribe("coolSide");
-  //   client.subscribe("heater");
-  //   client.subscribe("amTemperature");
-  //   client.subscribe("pmTemperature");
-  // }
 
-  // function onFailure() {
-  //   console.log("Failed to connect!");
-  //   setIsConnected(false);
-  // }
 
   function onMessageReceived(message) {
     switch (message.destinationName) {
@@ -169,7 +152,6 @@ export function GaugeScreen() {
   // });
 
   // client.onMessageArrived = onMessageReceived;
->>>>>>> 09bc2c5 (out of step)
 
     return () => {
       client.disconnect();
@@ -219,7 +201,7 @@ export function GaugeScreen() {
    *      Function to reconnect              *
    *               start                     *
    *******************************************/
-<<<<<<< HEAD
+
   const reconnect = () => {
     if (!client.isConnected()) {
       console.log("Attempting to reconnect...");
@@ -243,32 +225,7 @@ export function GaugeScreen() {
       console.log("Already connected.");
     }
   };
-=======
-  // const reconnect = () => {
-  //   if (!client.isConnected()) {
-  //     console.log("Attempting to reconnect...");
-  //     client.connect({
-  //       onSuccess: () => {
-  //         console.log("Reconnected successfully.");
-  //         setIsConnected(true);
-  //         client.subscribe("outSide");
-  //         client.subscribe("coolSide");
-  //         client.subscribe("heater");
-  //         client.subscribe("amTemperature");
-  //         client.subscribe("pmTemperature");
-  //       },
-  //       onFailure: (err) => {
-  //         console.log("Failed to reconnect:", err);
-  //         setIsConnected(false);
-  //       },
-  //     });
-  //   } else {
-  //     console.log("Already connected.");
-  //   }
-  // };
-  // const { isConnected, reconnect } = useMQTT(onMessage);
 
->>>>>>> 09bc2c5 (out of step)
   /*******************************************
    *      Function to reconnect              *
    *                 end                     *
