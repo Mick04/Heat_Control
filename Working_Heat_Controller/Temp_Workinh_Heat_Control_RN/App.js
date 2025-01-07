@@ -13,15 +13,6 @@ import HomeScreen from "./components/HomeScreen.js";
 
 const Tab = createMaterialTopTabNavigator();
 
-//   return (
-//     <SafeAreaView>
-//       <ScrollView>
-//         <TemperatureGraph />
-//       </ScrollView>
-//     </SafeAreaView>
-//   );
-// };
-
 function App() {
   return (
     <SafeAreaView style={styles.AndroidSafeArea}>

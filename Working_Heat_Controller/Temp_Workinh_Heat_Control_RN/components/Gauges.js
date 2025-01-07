@@ -42,7 +42,7 @@ export function GaugeScreen() {
    * **********************************/
   const [outSide, setOutSideTemp] = useState(0);
   const [coolSide, setCoolSideTemp] = useState(0);
-  const [heater, setControlTemp] = useState(0);
+  const [heater, setHeaterTemp] = useState(0);
   const [amTemperature, setAmTemperature] = useState(0);
   const [pmTemperature, setPmTemperature] = useState(0);
   const [gaugeHours, setgaugeHours] = useState(0);
@@ -88,7 +88,7 @@ export function GaugeScreen() {
           setCoolSideTemp(parseInt(message.payloadString));
           break;
         case "heater":
-          setControlTemp(parseInt(message.payloadString));
+          setHeaterTemp(parseInt(message.payloadString));
           break;
         case "amTemperature":
           setAmTemperature(parseInt(message.payloadString));

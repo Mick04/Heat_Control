@@ -1,6 +1,4 @@
 //****** OTA *******
-
-#include <ArduinoJson.h>
 #include <ESP8266WiFi.h>
 #include <WiFiManager.h>  // https://github.com/tzapu/WiFiManager
 #include <ESP8266mDNS.h>
@@ -74,7 +72,7 @@ NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
       wifi and pubSup credentials start
  * ******************************************/
 
-const char *ssid = "Gimp_EXT";
+const char *ssid = "Gimp";
 const char *password = "FC7KUNPX";
 const char *mqtt_server = "public.mqtthq.com";
 
@@ -191,6 +189,7 @@ void loop() {
   // delay(1000);
   if (!client.connected()) {
     reconnect();
+    Serial.println("--LINE--");
   }
 
   client.loop();
